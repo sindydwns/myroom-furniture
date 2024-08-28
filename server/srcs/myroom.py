@@ -13,13 +13,17 @@ query = "빈 공간에 소파를 배치해"
 
 
 database = [
-    {"id": 1, "name": "화분", "width": 1, "height": 1},
-    {"id": 2, "name": "의자", "width": 1, "height": 1, "tip": "책상 주위에 의자를 배치한다면 되도록 책상의 긴 면의 중앙에 배치합니다."},
-    {"id": 3, "name": "책상", "width": 2, "height": 3, "tip": "되도록 넓은 면이 벽에 닿게 배치하세요."},
-    {"id": 4, "name": "침대", "width": 3, "height": 5, "tip": "침대는 사이즈가 크기 때문에 되도록 구석에 배치합니다."},
-    {"id": 5, "name": "소파", "width": 4, "height": 1},
-    {"id": 6, "name": "스탠딩 조명", "width": 1, "height": 1, "tip": "이 조명은 바닥에 배치합니다."},
-    
+    {"id": 1, "name": "침대", "width": 2, "height": 3},
+    {"id": 2, "name": "책상", "width": 2, "height": 1},
+    {"id": 3, "name": "의자", "width": 1, "height": 1},
+    {"id": 4, "name": "소파", "width": 3, "height": 1},
+    {"id": 5, "name": "화분", "width": 1, "height": 1},
+    {"id": 6, "name": "스탠딩조명", "width": 1, "height": 1},
+    {"id": 7, "name": "탁자", "width": 2, "height": 1},
+    {"id": 8, "name": "곰인형", "width": 1, "height": 1},
+    {"id": 9, "name": "변기", "width": 1, "height": 1},
+    {"id": 10, "name": "세면대", "width": 1, "height": 1},
+    {"id": 11, "name": "쓰레기통", "width": 1, "height": 1},
 ]
 system_prompt = """당신은 방을 꾸미는 어시스던트이며 다음과 같은 정보를 알고 있습니다.
 방은 8x8 격자 좌표로 이루어져 있으며 사용자의 요청에 맞게 가구를 배치해야 합니다.
