@@ -5,15 +5,15 @@ import numpy as np
 import json
 client = OpenAI()
 
-query = "왼쪽 벽에 침대를 붙여서 배치하고 오른쪽 벽에 소파를 배치해"
+# query = "왼쪽 벽에 침대를 붙여서 배치하고 오른쪽 벽에 소파를 배치해"
 # query = "침대와 책상 의자 그리고 스탠딩 조명을 멋있게 배치해줘"
 # query = "침대는 방 구석에 배치하고 대각선 반대편에 책상과 의자를 둬. 남은 공간에 소파도 배치해"
 # query = "구석에 침대를 두고 남은 공간의 중앙에는 책상을 배치해 그리고 그 앞에는 의자를 두고 책상 옆에 스탠딩 조명을 둬"
-# query = "방의 모든 가장자리에 화분을 배치해"
+query = "방의 모든 가장자리에 화분을 배치해"
 
 
 database = [
-    {"id": 0, "name": "침대", "width": 2, "height": 3},
+    {"id": 0, "name": "침대", "width": 2, "height": 3, "figure": "머리맡이 "},
     {"id": 1, "name": "책상", "width": 2, "height": 1},
     {"id": 2, "name": "의자", "width": 1, "height": 1},
     {"id": 3, "name": "소파", "width": 3, "height": 1},
@@ -28,7 +28,7 @@ database = [
 system_prompt = """당신은 인테리어 전문가이며 다음 규칙에 따라 가구를 배치해야 합니다.
 
 다음 사항은 반드시 알아야 합니다.
-1. 방은 8x8 격자 좌표로 이루어져 있습니다.
+1. 방은 6x6 격자 좌표로 이루어져 있습니다.
 2. 사용자는 방을 대각선에서 isometric시점으로 바라봅니다. 방의 북서는 위쪽, 북동은 오른쪽, 남동은 아래쪽, 남서는 왼쪽입니다.
 3. 사용자 시점에서 오른쪽 벽에는 창문이 있습니다.
 4. 가구는 직사각형이며 width와 height를 가집니다.
@@ -52,16 +52,11 @@ system_prompt = """당신은 인테리어 전문가이며 다음 규칙에 따�
 
 배치 가능한 가구:\n""" + "\n".join([json.dumps(data, ensure_ascii=False) for data in database]) + """
 이미 배치된 가구:
-
+{"id": 0, "x": 0, "y": 0, "r": 0}
+{"id": 1, "x": 6, "y": 0, "r": 0}
+{"id": 2, "x": 7, "y": 1, "r": 0}
+{"id": 5, "x": 7, "y": 7, "r": 0}
 """
-
-# {"id": 4, "x": 0, "y": 0, "w": 5, "h": 3}
-# {"id": 3, "x": 5, "y": 0, "w": 2, "h": 3}
-# {"id": 2, "x": 5, "y": 3, "w": 1, "h": 1}
-# {"id": 6, "x": 7, "y": 7, "w": 1, "h": 1}
-# {"id": 1, "x": 0, "y": 3, "w": 1, "h": 1}
-# {"id": 1, "x": 4, "y": 3, "w": 1, "h": 1}
-
 
 fewshot = """
 사용자의 요청 예시: 방 구석에 침대를 두고 그 옆에 화분을 둬
@@ -119,7 +114,7 @@ completion = client.chat.completions.create(
 res = completion.choices[0].message.content
 print(res)
 res = json.loads(res)
-room = np.zeros((8, 8))
+room = np.zeros((6, 6))
 for o in res["objects"]:
     id, x, y, r = o["id"], o["x"], o["y"], o["r"]
     item = list(filter(lambda x: x["id"] == id, database))[0]
