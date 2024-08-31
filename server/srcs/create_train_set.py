@@ -41,6 +41,8 @@ with open("resources/requests.txt", "r") as i, \
     for line in lines:
         if not line.strip() :
             continue
+        if line.startswith("###"):
+            break
         if line.startswith("#"):
             print(line.strip())
             continue
