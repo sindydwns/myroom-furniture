@@ -1,5 +1,7 @@
 upload/
 myroom/
+server/srcs/resources/responses.txt
+server/srcs/resources/train.jsonl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
