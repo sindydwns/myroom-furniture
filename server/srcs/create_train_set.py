@@ -38,11 +38,16 @@ with open("resources/requests.txt", "r") as i, \
         open("resources/train.jsonl", "+a") as o, \
         open("resources/responses.txt", "+a") as r:
     lines = i.readlines()
+    skipmode = False
     for line in lines:
-        if not line.strip() :
+        line = line.strip()
+        if not line:
             continue
         if line.startswith("###"):
-            break
+            skipmode = not skipmode
+            continue
+        if skipmode:
+            continue
         if line.startswith("#"):
             print(line.strip())
             continue
