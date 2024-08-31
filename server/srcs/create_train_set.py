@@ -31,9 +31,14 @@ def query(q):
 with open("resources/requests.txt", "r") as i, open("resources/train.jsonl", "+a") as o:
     lines = i.readlines()
     for line in lines:
+        if not line.strip() :
+            continue
+        if line.startswith("#"):
+            print(line.strip())
+            continue
         result = query(line)
-        print(line.strip())
-        print(result[-1]["content"])
+        print("요청:", line.strip())
+        print(result[-1]["content"].strip(), "\n")
         json_text = json.dumps({"messages": result}, ensure_ascii=False)
         o.write(json_text + "\n")
 
