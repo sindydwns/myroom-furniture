@@ -4,7 +4,7 @@ client = OpenAI()
 
 with open("resources/prompt.txt", "r") as f_prompt, \
         open("resources/fewshot.txt", "r") as f_fewshot, \
-        open("resources/enviroment.txt", "r") as f_environment, \
+        open("resources/enviroment.csv", "r") as f_environment, \
         open("resources/items.json", "r") as f_items:
     system_prompt = f_prompt.read()
     database = json.load(f_items)["items"]
