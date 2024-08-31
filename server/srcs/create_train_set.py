@@ -1,6 +1,12 @@
 from openai import OpenAI
 import json
+import os
 client = OpenAI()
+if "MODEL" in os.environ:
+    model = os.environ["MODEL"]
+else:
+    model = "gpt-4o"
+print(model)
 
 with open("resources/prompt.txt", "r") as f_prompt, \
         open("resources/fewshot.txt", "r") as f_fewshot, \
@@ -20,7 +26,7 @@ def query(q):
         {"role": "system", "content": "\n".join([json.dumps(data, ensure_ascii=False) for data in database])},
         {"role": "user", "content": query_prompt},
     ]
-    completion = client.chat.completions.create(model="gpt-4o", messages=messages, temperature=0)
+    completion = client.chat.completions.create(model=model, messages=messages, temperature=0)
     content = completion.choices[0].message.content
     role = completion.choices[0].message.role
     strip_content = "\n".join([c.strip() for c in content.split("\n")])
