@@ -1,15 +1,15 @@
 {
     "items": [
-        {"id": 0, "name": "침대", "width": 2, "height": 3, "figure": "머리맡이 "},
-        {"id": 1, "name": "책상", "width": 2, "height": 1},
-        {"id": 2, "name": "의자", "width": 1, "height": 1},
-        {"id": 3, "name": "소파", "width": 3, "height": 1},
-        {"id": 4, "name": "화분", "width": 1, "height": 1},
-        {"id": 5, "name": "스탠딩조명", "width": 1, "height": 1},
-        {"id": 6, "name": "탁자", "width": 2, "height": 1},
-        {"id": 7, "name": "곰인형", "width": 1, "height": 1},
-        {"id": 8, "name": "변기", "width": 1, "height": 1},
-        {"id": 9, "name": "세면대", "width": 1, "height": 1},
-        {"id": 10, "name": "쓰레기통", "width": 1, "height": 1}
+        {"id": 100, "name": "침대", "width": 2, "height": 3, "figure": "머리맡이 "},
+        {"id": 101, "name": "책상", "width": 2, "height": 1},
+        {"id": 102, "name": "의자", "width": 1, "height": 1},
+        {"id": 103, "name": "소파", "width": 3, "height": 1},
+        {"id": 104, "name": "화분", "width": 1, "height": 1},
+        {"id": 105, "name": "스탠딩조명", "width": 1, "height": 1},
+        {"id": 106, "name": "탁자", "width": 2, "height": 1},
+        {"id": 107, "name": "곰인형", "width": 1, "height": 1},
+        {"id": 108, "name": "변기", "width": 1, "height": 1},
+        {"id": 109, "name": "세면대", "width": 1, "height": 1},
+        {"id": 110, "name": "쓰레기통", "width": 1, "height": 1}
     ]
 }

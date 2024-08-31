@@ -28,7 +28,9 @@ def query(q):
     messages.append(new_message)
     return messages
 
-with open("resources/requests.txt", "r") as i, open("resources/train.jsonl", "+a") as o:
+with open("resources/requests.txt", "r") as i, \
+        open("resources/train.jsonl", "+a") as o, \
+        open("resources/responses.txt", "+a") as r:
     lines = i.readlines()
     for line in lines:
         if not line.strip() :
@@ -41,6 +43,7 @@ with open("resources/requests.txt", "r") as i, open("resources/train.jsonl", "+a
         print(result[-1]["content"].strip(), "\n")
         json_text = json.dumps({"messages": result}, ensure_ascii=False)
         o.write(json_text + "\n")
+        r.writelines([line.strip(), "\n", *result[-1]["content"].strip().split("\n"), "\n\n"])
 
 
 # query_prompt = "사용자의 요청: " + q
