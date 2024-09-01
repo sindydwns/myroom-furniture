@@ -18,7 +18,7 @@ with open("resources/prompt.txt", "r") as f_prompt, \
     fewshot = f_fewshot.read()
     base_env = f_environment.read()
 
-def query(q, environment):
+def encode(q, environment):
     query_prompt = "사용자의 요청: " + q
     messages = [
         {"role": "system", "content": system_prompt},
@@ -33,4 +33,10 @@ def query(q, environment):
     strip_content = "\n".join([c.strip() for c in content.split("\n")])
     new_message = {"role": role, "content": strip_content}
     messages.append(new_message)
-    return messages
+    return strip_content, messages
+
+def get_env(filename=None):
+    if not filename:
+        return base_env
+    with open("resources/presets/" + filename, "r") as preset:
+        return base_env + "".join(preset.readlines()[1:])

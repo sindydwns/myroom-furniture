@@ -1,4 +1,4 @@
-from myroom import query, base_env
+from myroom import encode, get_env
 import json
 
 with open("resources/requests.txt", "r") as i, \
@@ -6,7 +6,7 @@ with open("resources/requests.txt", "r") as i, \
         open("resources/responses.txt", "+a") as r:
     lines = i.readlines()
     skipmode = False
-    add_env = ""
+    env = get_env()
     for line in lines:
         line = line.strip()
         if not line:
@@ -21,15 +21,14 @@ with open("resources/requests.txt", "r") as i, \
             continue
         if line.startswith("@"):
             filename = line[1:].strip()
-            with open("resources/presets/" + filename, "r") as preset:
-                add_env = "".join(preset.readlines()[1:])
+            env = get_env(filename)
             continue
-        result = query(line, base_env + add_env)
+        content, result = encode(line, env)
         print("요청:", line.strip())
-        print(result[-1]["content"].strip(), "\n")
+        print(content.strip(), "\n")
         json_text = json.dumps({"messages": result}, ensure_ascii=False)
         o.write(json_text + "\n")
-        r.writelines([line.strip(), "\n", *result[-1]["content"].split("\n"), "\n\n"])
+        r.writelines([line.strip(), "\n", *content.split("\n"), "\n\n"])
 
 
 # query_prompt = "사용자의 요청: " + q
