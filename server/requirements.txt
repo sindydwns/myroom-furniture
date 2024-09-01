@@ -1,5 +1,7 @@
 openai
 numpy
+pandas
 fastapi[all]
 uvicorn
 python-multipart
+
