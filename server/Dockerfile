@@ -1,7 +1,7 @@
-FROM python:3.12-alpine3.20
+FROM python:3.11
 
-RUN apk update
-RUN apk add git vim sudo curl gcc make dumb-init
+RUN apt update -y
+RUN apt install -y git vim sudo curl gcc make dumb-init
 
 RUN pip install --upgrade pip
 RUN pip install fastapi[all]

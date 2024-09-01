@@ -4,4 +4,4 @@ pandas
 fastapi[all]
 uvicorn
 python-multipart
-
+torch
