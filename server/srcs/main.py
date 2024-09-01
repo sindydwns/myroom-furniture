@@ -1,4 +1,4 @@
-from myroom import encode, get_env
+from myroom import encode, Environment
 import json
 
 def parse(str: str):
@@ -17,17 +17,20 @@ def parse(str: str):
         print("except:", str)
         return None
 
-def action(cmds, env):
+def action(cmds, env: Environment):
     for cmd in cmds:
+        print(cmd)
         cmd = parse(cmd)
         if cmd["mode"] == "A":
             pass
         if cmd["mode"] == "E":
             pass
         if cmd["mode"] == "D":
-            pass
+            env.objs = env.objs[env.objs.instance_id != cmd["instance_id"]]
+    return env
 
-request_query = "방 안에 침대 배치해줘"
-content, _ = encode(request_query, get_env())
+env = Environment("single_bed.csv")
+request_query = "침대 뺴"
+content, _ = encode(request_query, env)
 contents = content.split("\n")
-action(contents)
+result_env = action(contents, env)

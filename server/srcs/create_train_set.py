@@ -1,4 +1,4 @@
-from myroom import encode, get_env
+from myroom import encode, Environment
 import json
 
 with open("resources/requests.txt", "r") as i, \
@@ -6,7 +6,7 @@ with open("resources/requests.txt", "r") as i, \
         open("resources/responses.txt", "+a") as r:
     lines = i.readlines()
     skipmode = False
-    env = get_env()
+    env = Environment()
     for line in lines:
         line = line.strip()
         if not line:
@@ -21,7 +21,7 @@ with open("resources/requests.txt", "r") as i, \
             continue
         if line.startswith("@"):
             filename = line[1:].strip()
-            env = get_env(filename)
+            env = Environment(filename)
             continue
         content, result = encode(line, env)
         print("요청:", line.strip())
