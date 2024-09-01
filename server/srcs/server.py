@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from stt import to_text
 from pydantic import BaseModel
 import os
@@ -43,6 +44,8 @@ async def predict(data: RequestData):
             {"id": 1, "x": 0, "y": 0, "r": 0}
         ]
     })
+
+app.mount("/static", StaticFiles(directory="resources/map"), name="static")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
