@@ -1,11 +1,21 @@
 from fastapi import FastAPI, UploadFile
 from fastapi.responses import JSONResponse
 from stt import to_text
-from myroom import RequestData
+from pydantic import BaseModel
 import os
 import uvicorn
 from uuid import uuid4
 from datetime import datetime
+
+class Furniture(BaseModel):
+    id: int
+    x: int
+    y: int
+    r: int
+
+class RequestData(BaseModel):
+    current: list[Furniture]
+    message: str
 
 app = FastAPI()
 
