@@ -6,23 +6,23 @@ if "MODEL" in os.environ:
     model = os.environ["MODEL"]
 else:
     model = "gpt-4o"
-print(model)
+print("model:", model)
 
 with open("resources/prompt.txt", "r") as f_prompt, \
         open("resources/fewshot.txt", "r") as f_fewshot, \
         open("resources/enviroment.csv", "r") as f_environment, \
         open("resources/items.json", "r") as f_items:
     system_prompt = f_prompt.read()
-    database = json.load(f_items)["items"]
+    database = json.load(f_items)["objects"]
     fewshot = f_fewshot.read()
-    environment = f_environment.read()
+    base_env = f_environment.read()
 
-def query(q):
+def query(q, environment):
     query_prompt = "사용자의 요청: " + q
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "system", "content": fewshot},
-        {"role": "system", "content": environment},
+        {"role": "system", "content": "*** 환경정보.csv ***\n" + environment},
         {"role": "system", "content": "\n".join([json.dumps(data, ensure_ascii=False) for data in database])},
         {"role": "user", "content": query_prompt},
     ]
@@ -39,6 +39,7 @@ with open("resources/requests.txt", "r") as i, \
         open("resources/responses.txt", "+a") as r:
     lines = i.readlines()
     skipmode = False
+    add_env = ""
     for line in lines:
         line = line.strip()
         if not line:
@@ -49,14 +50,19 @@ with open("resources/requests.txt", "r") as i, \
         if skipmode:
             continue
         if line.startswith("#"):
-            print(line.strip())
+            print(line)
             continue
-        result = query(line)
+        if line.startswith("@"):
+            filename = line[1:].strip()
+            with open("resources/presets/" + filename, "r") as preset:
+                add_env = "".join(preset.readlines()[1:])
+            continue
+        result = query(line, base_env + add_env)
         print("요청:", line.strip())
         print(result[-1]["content"].strip(), "\n")
         json_text = json.dumps({"messages": result}, ensure_ascii=False)
         o.write(json_text + "\n")
-        r.writelines([line.strip(), "\n", *result[-1]["content"].strip().split("\n"), "\n\n"])
+        r.writelines([line.strip(), "\n", *result[-1]["content"].split("\n"), "\n\n"])
 
 
 # query_prompt = "사용자의 요청: " + q

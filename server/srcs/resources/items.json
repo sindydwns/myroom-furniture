@@ -1,6 +1,9 @@
 {
-    "items": [
-        {"id": 100, "name": "침대", "width": 2, "height": 3, "figure": "머리맡이 "},
+    "objects": [
+        {"id": 0, "name": "room"},
+        {"id": 1, "name": "wall"},
+        {"id": 2, "name": "window"},
+        {"id": 100, "name": "침대", "width": 2, "height": 3},
         {"id": 101, "name": "책상", "width": 2, "height": 1},
         {"id": 102, "name": "의자", "width": 1, "height": 1},
         {"id": 103, "name": "소파", "width": 3, "height": 1},
