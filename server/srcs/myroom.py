@@ -1,6 +1,7 @@
 from openai import OpenAI
 import json
 import os
+
 client = OpenAI()
 if "MODEL" in os.environ:
     model = os.environ["MODEL"]
@@ -18,12 +19,12 @@ with open("resources/prompt.txt", "r") as f_prompt, \
     fewshot = f_fewshot.read()
     base_env = f_environment.read()
 
-def encode(q, environment):
+def encode(q, env):
     query_prompt = "사용자의 요청: " + q
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "system", "content": fewshot},
-        {"role": "system", "content": "*** 환경정보.csv ***\n" + environment},
+        {"role": "system", "content": "*** 환경정보.csv ***\n" + env},
         {"role": "system", "content": "\n".join([json.dumps(data, ensure_ascii=False) for data in database])},
         {"role": "user", "content": query_prompt},
     ]
