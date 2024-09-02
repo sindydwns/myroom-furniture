@@ -76,6 +76,10 @@ epochs = 200
 
 encoded_cmd = model.encode_cmd(parse("A100 100 R3 ne1"))
 encoded_env = model.encode_env(Environment())
+
+print(encoded_cmd)
+print(encoded_env)
+
 X_train1 = torch.FloatTensor(encoded_cmd).to(device)
 X_train2 = torch.FloatTensor(encoded_env).to(device)
 y_train = torch.FloatTensor(np.array([0, 0, 0]))

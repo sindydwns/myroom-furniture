@@ -1,3 +1,6 @@
+import uuid
+from datetime import datetime
+
 def parse(str: str):
     strs = str.split(" ")
     try:
@@ -19,3 +22,9 @@ def parse(str: str):
     except:
         print("except:", str)
         return None
+    
+def create_filename(suffix):
+    date_str = datetime.now().strftime("%m%d_%H%M")
+    unique_id = uuid.uuid4().hex[:10]
+    file_name = f"{date_str}_{unique_id}_{suffix}"
+    return file_name

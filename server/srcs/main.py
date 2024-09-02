@@ -14,7 +14,7 @@ def action(cmds, env: Environment):
             env.objs = env.objs[env.objs.instance_id != cmd["instance_id"]]
     return env
 
-env = Environment("single_bed.csv")
+env = Environment("empty.csv")
 request_query = "침대 뺴"
 content, _ = encode(request_query, env)
 contents = content.split("\n")

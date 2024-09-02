@@ -1,12 +1,17 @@
 from fastapi import FastAPI, UploadFile
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from myroom import encode, Environment
+from util import parse
 from stt import to_text
 from pydantic import BaseModel
 import os
 import uvicorn
 from uuid import uuid4
 from datetime import datetime
+import random
+import threading
+lock = threading.Lock()
 
 class Furniture(BaseModel):
     id: int
@@ -46,6 +51,52 @@ async def predict(data: RequestData):
     })
 
 app.mount("/static", StaticFiles(directory="resources/map"), name="static")
+
+@app.get("/sample")
+async def sample():
+    
+    
+    folder_dir = "resources/presets"
+    files = [f for f in os.listdir(folder_dir) if os.path.isfile(os.path.join(folder_dir, f))]
+    random_file = random.choice(files)
+    env = Environment(random_file)
+    request_query = "침대 뺴" ##############################################################
+    content, _ = encode(request_query, env)
+    cmds = content.split("\n")
+    return JSONResponse({
+        "cmd": parse(cmds[0]),
+        "cmd_str": cmds[0],
+        "env": env.to_list(),
+        "env_name": random_file
+    })
+
+class Answer(BaseModel):
+    object_id: int
+    instance_id: int
+    x: int
+    y: int
+    r: int
+
+class Trainset(BaseModel):
+    res: Answer
+    cmd: str
+    env_file: str
+
+@app.post("/trainset")
+async def add_trainset(data: Trainset):
+    # res=Answer(id=100, x=3, y=0, r=0) cmd='A100 100' env_file='single_bed.csv'
+    lock.acquire()
+    res = data.res
+    env = Environment(data.env_file, ignore_base=True)
+    env.objs = env.objs[env.objs["instance_id"] != res.instance_id]
+    if res.instance_id == 999:
+        res.instance_id = int(data.cmd.split(" ")[1])
+    env.add(res.object_id, res.instance_id, res.x, res.y, res.r)
+    new_env_file = env.save()
+    with open("resources/dataset/data.csv", "+a") as file:
+        file.write(f"{res.object_id},{res.instance_id},{res.x},{res.y},{res.r},{data.env_file},{new_env_file},{data.cmd}\n")
+    lock.release()
+    pass
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
