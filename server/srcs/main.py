@@ -1,21 +1,6 @@
 from myroom import encode, Environment
+from util import parse
 import json
-
-def parse(str: str):
-    strs = str.split(" ")
-    try:
-        mode, object_id = strs[0][0], int(strs[0][1:])
-        instance_id = int(strs[1])
-        locations = [[x[:2], int(x[2:])] for x in strs[2:]]
-        return {
-            "mode": mode,
-            "object_id": object_id,
-            "instance_id": instance_id,
-            "locations": locations
-        }
-    except:
-        print("except:", str)
-        return None
 
 def action(cmds, env: Environment):
     for cmd in cmds:

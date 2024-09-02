@@ -1,21 +1,24 @@
 import numpy as np
 import torch
+import pandas as pd
+from myroom import Environment
+from util import parse
 from tqdm import tqdm
 
 class FurnitureModel(torch.nn.Module):
     def __init__(self):
         super(FurnitureModel, self).__init__()
-        # [ADD|EDIT, instance_id, rotation, *location, *location, *location, *location]
+        # [ADD|EDIT, object_id, instance_id, rotation, *location, *location, *location, *location]
         self.loc_model = torch.nn.Sequential(
-            torch.nn.Linear(11, 128),
+            torch.nn.Linear(12, 128),
             torch.nn.ReLU(),
             torch.nn.Linear(128, 128),
         )
-        # [*[object_id, instance_id, x, y, r] x 20]
+        # [*[object_id, instance_id, x, y, r] x 40]
         self.env_model = torch.nn.Sequential(
-            torch.nn.Linear(100, 256),
+            torch.nn.Linear(200, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(256, 128),
+            torch.nn.Linear(512, 128),
         )
         self.fusion_model = torch.nn.Sequential(
             torch.nn.Linear(256, 512),
@@ -31,14 +34,50 @@ class FurnitureModel(torch.nn.Module):
         out = self.fusion_model(concat_feat)
         return out
 
+    def encode_location(self, code):
+        if code == "ne": return 1.
+        if code == "fa": return 2.
+        if code == "le": return 3.
+        if code == "ri": return 4.
+        if code == "on": return 5.
+        if code == "un": return 6.
+        if code == "in": return 7.
+        if code == "fr": return 8.
+        if code == "ba": return 9.
+        if code == "ce": return 10.
+        return 0.
+
+    def encode_cmd(self, data):
+        print(data)
+        res = np.zeros((12), dtype=np.float32)
+        res[0] = 0. if data["mode"] == "A" else 1.
+        res[1] = float(data["object_id"])
+        res[2] = float(data["instance_id"])
+        res[3] = float(data["rotation"])
+        for i, k in enumerate(data["locations"]):
+            res[4 + i * 2] = self.encode_location(k[0])
+            res[5 + i * 2] = float(k[1])
+        return res
+
+    def encode_env(self, data: Environment):
+        data = data.objs
+        res = np.zeros((200), dtype=np.float32)
+        data = data[["object_id", "instance_id", "x", "y", "rotation"]].to_numpy()
+        data = data.flatten()
+        data = data[:200]
+        res[:len(data)] = data
+        return res
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model = FurnitureModel().to(device)
 optim = torch.optim.Adam(model.parameters(), lr=0.001)
 criterion = torch.nn.MSELoss()
 epochs = 200
 
-X_train1 = torch.FloatTensor(np.array([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]))
-X_train2 = torch.FloatTensor(np.array([0,0,0,0,6,6,0,1,1,0,0,6,0,0,1,2,0,0,0,6,0,1,3,6,0,0,6,0,1,4,0,6,6,0,0,2,5,2,0,2,0,0,0,0,0,0,0,0]))
+encoded_cmd = model.encode_cmd(parse("A100 100 R3 ne1"))
+encoded_env = model.encode_env(Environment())
+X_train1 = torch.FloatTensor(encoded_cmd).to(device)
+X_train2 = torch.FloatTensor(encoded_env).to(device)
 y_train = torch.FloatTensor(np.array([0, 0, 0]))
 
 model.train(True)
