@@ -5,21 +5,24 @@ from tqdm import tqdm
 class FurnitureModel(torch.nn.Module):
     def __init__(self):
         super(FurnitureModel, self).__init__()
+        # [ADD|EDIT, instance_id, rotation, *location, *location, *location, *location]
         self.loc_model = torch.nn.Sequential(
-            torch.nn.Linear(16, 128),
+            torch.nn.Linear(11, 128),
             torch.nn.ReLU(),
-            torch.nn.Linear(128, 64),
+            torch.nn.Linear(128, 128),
         )
+        # [*[object_id, instance_id, x, y, r] x 20]
         self.env_model = torch.nn.Sequential(
-            torch.nn.Linear(72, 256),
+            torch.nn.Linear(100, 256),
             torch.nn.ReLU(),
-            torch.nn.Linear(256, 64),
+            torch.nn.Linear(256, 128),
         )
         self.fusion_model = torch.nn.Sequential(
-            torch.nn.Linear(128, 128),
+            torch.nn.Linear(256, 512),
             torch.nn.ReLU(),
-            torch.nn.Linear(128, 3)
+            torch.nn.Linear(512, 3)
         )
+        # [x, y, r]
     
     def forward(self, add, env):
         add_feat = self.loc_model(add)

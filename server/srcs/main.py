@@ -24,8 +24,7 @@ def action(cmds, env: Environment):
         if cmd["mode"] == "A":
             pass
         if cmd["mode"] == "E":
-            env.objs = env.objs[env.objs.instance_id != cmd["instance_id"]]
-            
+            pass
         if cmd["mode"] == "D":
             env.objs = env.objs[env.objs.instance_id != cmd["instance_id"]]
     return env
