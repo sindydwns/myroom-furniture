@@ -68,57 +68,13 @@ class FurnitureModel(torch.nn.Module):
         res[:len(data)] = data
         return res
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model = FurnitureModel().to(device)
-optim = torch.optim.Adam(model.parameters(), lr=0.00001)
-criterion = torch.nn.MSELoss()
-epochs = 200
+model = FurnitureModel()
 
-encoded_cmd = model.encode_cmd(parse("A100 100 R3 ne1"))
-encoded_env = model.encode_env(Environment())
-
-# print(encoded_cmd)
-# print(encoded_env)
-
-# X_train1 = torch.FloatTensor(encoded_cmd).to(device)
-# X_train2 = torch.FloatTensor(encoded_env).to(device)
-# y_train = torch.FloatTensor(np.array([0, 0, 0]))
-
-
-
-
-df = pd.read_csv("resources/dataset/data.csv")
-datas = []
-for _, item in df.iterrows():
-    x_cmd = model.encode_cmd(parse(item.iloc[7]))
-    x_env = model.encode_env(Environment(item.iloc[5]))
-    y = np.array([int(item.iloc[2]), int(item.iloc[3]), int(item.iloc[4])])
-    X_train1 = torch.FloatTensor(x_cmd).to(device)
-    X_train2 = torch.FloatTensor(x_env).to(device)
-    y_train = torch.FloatTensor(y).to(device)
-    datas.append((X_train1, X_train2, y_train))
-
-for epoch in range(10000):
-    total_loss = 0
-    for X_train1, X_train2, y_train in datas:
-        optim.zero_grad()
-        pred = model(X_train1, X_train2)
-        loss = criterion(pred, y_train)
-        loss.backward()
-        total_loss += loss.item()
-        optim.step()
-    print(f"{epoch} loss {total_loss / len(datas)}")
-torch.save(model.state_dict(),'last.pt')
-
-# model.train(True)
-# X_train1 = X_train1.to(device)
-# X_train2 = X_train2.to(device)
-# y_train = y_train.to(device)
-# for epoch in range(epochs):
-#     optim.zero_grad()
-#     pred = model(X_train1, X_train2)
-#     loss = criterion(pred, y_train)
-#     loss.backward()
-#     optim.step()
-
-#     print(f"loss {pred}\t{loss.item()}")
+model.load_state_dict(torch.load('last.pt'))
+encoded_cmd = model.encode_cmd(parse("E100 100 R2"))
+encoded_env = model.encode_env(Environment("0903_0807_db2bb979f7_.csv"))
+data1 = torch.FloatTensor(encoded_cmd)
+data2 = torch.FloatTensor(encoded_env)
+model.eval()
+res = model(data1, data2)
+print(res)

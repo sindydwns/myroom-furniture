@@ -1,4 +1,7 @@
 database = [
+    { id: 1, name: "방", width: 0, height: 0, sprite: "" },
+    { id: 2, name: "벽", width: 0, height: 0, sprite: "" },
+    { id: 3, name: "창문", width: 0, height: 0, sprite: "" },
     { id: 100, name: "침대", width: 2, height: 3, sprite: "/static/sprites/100_bed.png" },
     { id: 101, name: "책상", width: 2, height: 1, sprite: "/static/sprites/101_desk.png" },
     { id: 102, name: "의자", width: 1, height: 1, sprite: "/static/sprites/102_chair.png" },
@@ -59,7 +62,7 @@ function redraw() {
                     return;
                 }
                 img.src = meta.sprite;
-                img.className = `rotate-${object.r * 90}`;
+                img.className = `rotate-${(object.r % 4) * 90}`;
                 instanceText.innerText = object.instance_id == 999 ? "" : object.instance_id;
             }
         }
@@ -93,6 +96,7 @@ function set_item(id, x, y, rotation, draw = false) {
     state.object_id = id;
     state.x = x;
     state.y = y;
+    console.trace(rotation);
     state.rotation = rotation;
     state.draw = draw;
     state.new_item = { object_id: id, instance_id: 999, x: x, y: y, r: rotation }
@@ -104,20 +108,6 @@ document.querySelectorAll(".grid-item").forEach(x => x.addEventListener("click",
     set_item(state.object_id, +x, +y, state.rotation, true);
 }))
 
-database = [
-    { id: 100, name: "침대", width: 2, height: 3, sprite: "/static/sprites/100_bed.png" },
-    { id: 101, name: "책상", width: 2, height: 1, sprite: "/static/sprites/101_desk.png" },
-    { id: 102, name: "의자", width: 1, height: 1, sprite: "/static/sprites/102_chair.png" },
-    { id: 103, name: "소파", width: 3, height: 1, sprite: "/static/sprites/103_sofa.png" },
-    { id: 104, name: "화분", width: 1, height: 1, sprite: "/static/sprites/104_pot.png" },
-    { id: 105, name: "스탠딩조명", width: 1, height: 1, sprite: "/static/sprites/105_light.png" },
-    { id: 106, name: "탁자", width: 2, height: 1, sprite: "/static/sprites/106_table.png" },
-    { id: 107, name: "곰인형", width: 1, height: 1, sprite: "/static/sprites/107_doll.png" },
-    { id: 108, name: "변기", width: 1, height: 1, sprite: "/static/sprites/108_toilet.png" },
-    { id: 109, name: "세면대", width: 1, height: 1, sprite: "/static/sprites/109_sink.png" },
-    { id: 110, name: "쓰레기통", width: 1, height: 1, sprite: "/static/sprites/110_bin.png" },
-]
-
 function getMeta(id) {
     return database.filter(x => x.id == id)[0];
 }
@@ -127,31 +117,53 @@ function getItem(instance_id) {
 }
 
 async function checkout() {
-    const rawData = await fetch("/sample")
-    const jsonData = await rawData.json();
-    const { cmd, cmd_str, env, env_name } = jsonData;
-    console.log(jsonData)
-    items = env;
-    _env_file = env_name
-    _cmd = cmd_str;
+    try {
+        const rawData = await fetch("/sample")
+        if (rawData.status != 200) throw "x"
+        const jsonData = await rawData.json();
+        const { cmd, cmd_str, env, env_name } = jsonData;
+        console.log(jsonData)
+        items = env;
+        _env_file = env_name
+        _cmd = cmd_str;
 
-    const meta = getMeta(jsonData.cmd.object_id);
-    let pre_rotation = jsonData.cmd.rotation;
-    let pre_x = 0;
-    let pre_y = 0;
-    if (jsonData.cmd.mode == "E") {
-        const instance = getItem(jsonData.cmd.instance_id);
-        pre_rotation += instance.rotation;
-        pre_x += instance.x;
-        pre_y += instance.y;
+        const meta = getMeta(jsonData.cmd.object_id);
+        let pre_rotation = jsonData.cmd.rotation;
+        let pre_x = 0;
+        let pre_y = 0;
+        if (jsonData.cmd.mode == "E") {
+            const instance = getItem(jsonData.cmd.instance_id);
+            pre_rotation += instance.r;
+            pre_x += instance.x;
+            pre_y += instance.y;
+        }
+        const { mode, object_id, instance_id, rotation, locations } = cmd;
+        const strMode = mode == "A" ? "추가" : "수정";
+        const strObjectName = getMeta(object_id).name;
+        const strInstanceId = mode == "A" ? "" : `(${instance_id})`
+        const strRotation = rotation > 0 ? `${rotation * 90}도 회전` : ""
+        const strLocations = locations.map(x => locationToStr(x))
+        document.getElementById("cmd").innerText = `${strObjectName}${strInstanceId} ${strMode}. ${strRotation} ${strLocations}`;
+
+        set_item(meta.id, pre_x, pre_y, pre_rotation)
+    } catch (e) {
+        window.location.reload()
     }
-    const { mode, object_id, instance_id, rotation } = cmd;
-    const strMode = mode == "A" ? "추가" : "수정";
-    const strObjectName = getMeta(object_id).name;
-    const strInstanceId = mode == "A" ? "" : `(${instance_id})`
-    const strRotation = rotation > 0 ? `${rotation * 90}도 회전` : ""
-    document.getElementById("cmd").innerText = `${strObjectName}${strInstanceId} ${strMode}. ${strRotation}`;
-    set_item(meta.id, pre_x, pre_y, pre_rotation)
+}
+
+function locationToStr(x) {
+    let strLocation = ""
+    if (x[0] == "ne") strLocation = "근처에"
+    if (x[0] == "fa") strLocation = "멀리에"
+    if (x[0] == "le") strLocation = "왼쪽에"
+    if (x[0] == "ri") strLocation = "오른쪽에"
+    if (x[0] == "on") strLocation = "위에"
+    if (x[0] == "un") strLocation = "아래에"
+    if (x[0] == "in") strLocation = "안에"
+    if (x[0] == "fr") strLocation = "앞에"
+    if (x[0] == "ba") strLocation = "뒤에"
+    if (x[0] == "ce") strLocation = "중앙에"
+    return `${getMeta(getItem(x[1]).object_id).name}(${x[1]}) ${strLocation}`
 }
 
 let doubleCheck = false;
@@ -162,7 +174,7 @@ async function submit() {
     const data = {
         res: {
             object_id: state.object_id,
-            instance_id: state.new_item.instance_id,
+            instance_id: +(_cmd.split(" ")[1]),
             x: state.new_item.x,
             y: state.new_item.y,
             r: state.rotation
@@ -171,6 +183,7 @@ async function submit() {
         env_file: _env_file,
     }
     try {
+        console.log(JSON.stringify(data));
         const res = await fetch("/trainset", {
             method: "post",
             headers: {
@@ -179,8 +192,9 @@ async function submit() {
             },
             body: JSON.stringify(data)
         });
-        if (res.status < 200) throw "x"
+        if (res.status != 200) throw "x"
     } catch (e) {
+        console.log(e);
         alert("전송 실패");
     }
     window.location.reload()

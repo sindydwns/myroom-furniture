@@ -1,7 +1,7 @@
-from fastapi import FastAPI, UploadFile
+from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from myroom import encode, Environment
+from myroom import encode, create_question, Environment
 from util import parse
 from stt import to_text
 from pydantic import BaseModel
@@ -43,10 +43,11 @@ async def stt(audio: UploadFile):
 @app.post("/api/v1/prediction")
 async def predict(data: RequestData):
     print(data.current[0])
-    return JSONResponse({
+    return JSONResponse({ 
         "message": "샘플데이터 입니다. 구석에 테스트 물품 하나를 배치했습니다.",
         "add": [
-            {"id": 1, "x": 0, "y": 0, "r": 0}
+            {"id": 1, "x": 0, "y": 0, "r": 0},
+            {"id": 2, "x": 0, "y": 0, "r": 0}
         ]
     })
 
@@ -54,17 +55,20 @@ app.mount("/static", StaticFiles(directory="resources/map"), name="static")
 
 @app.get("/sample")
 async def sample():
-    
-    
     folder_dir = "resources/presets"
     files = [f for f in os.listdir(folder_dir) if os.path.isfile(os.path.join(folder_dir, f))]
     random_file = random.choice(files)
     env = Environment(random_file)
-    request_query = "침대 뺴" ##############################################################
+    request_query = create_question(env)
+    print(">> ", request_query)
     content, _ = encode(request_query, env)
+    print(">> ", content)
     cmds = content.split("\n")
+    parsed_cmd = parse(cmds[0])
+    if parsed_cmd is None:
+        raise HTTPException(status_code=500, detail=cmds[0])
     return JSONResponse({
-        "cmd": parse(cmds[0]),
+        "cmd": parsed_cmd,
         "cmd_str": cmds[0],
         "env": env.to_list(),
         "env_name": random_file
@@ -88,6 +92,7 @@ async def add_trainset(data: Trainset):
     lock.acquire()
     res = data.res
     env = Environment(data.env_file, ignore_base=True)
+    print(res.instance_id)
     env.objs = env.objs[env.objs["instance_id"] != res.instance_id]
     if res.instance_id == 999:
         res.instance_id = int(data.cmd.split(" ")[1])
