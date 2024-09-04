@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from myroom import encode, create_question, Environment
+from myroom import encode, create_question, apply, Environment
 from util import parse
 from stt import to_text
 from pydantic import BaseModel
@@ -42,9 +42,17 @@ async def stt(audio: UploadFile):
 
 @app.post("/api/v1/prediction")
 async def predict(data: RequestData):
-    print(data.current[0])
+    env = Environment()
+    instance_id = 100
+    for d in data.current:
+        env.add(d.id, instance_id, d.x, d.y, d.r)
+    m, ms = encode(data.message, env)
+    queries = m.split("\n")
+    res = []
+    for query in queries:
+        res.append(apply(env, query))
     return JSONResponse({ 
-        "message": "샘플데이터 입니다. 구석에 테스트 물품 하나를 배치했습니다.",
+        "message": ", ".join(queries),
         "add": [
             {"id": 1, "x": 0, "y": 0, "r": 0},
             {"id": 2, "x": 0, "y": 0, "r": 0}
