@@ -38,7 +38,7 @@ class Environment:
     def to_list(self):
         lst = []
         for _, r in self.objs.iterrows():
-            lst.append({"object_id": r[0], "instance_id": r[1], "x": r[2], "y": r[3], "r": r[6]})
+            lst.append({"object_id": r.iloc[0], "instance_id": r.iloc[1], "x": r.iloc[2], "y": r.iloc[3], "r": r.iloc[6]})
         return lst
     
     def add(self, object_id, instance_id, x, y, r):
