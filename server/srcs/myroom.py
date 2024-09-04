@@ -161,7 +161,7 @@ def place_zero(room: np, item: Furniture):
             if x + w < room.shape[1] and y + h < room.shape[0]:
                 room[y + h, x + w] = 0
 
-def find_empty_cell(env: Environment, loc: Location) -> list:
+def find_empty_cell(env: Environment, loc: Location, weight: float = 1.) -> list:
     
     room_instance = env.get(1)
     room_meta = database_map[room_instance.object_id]
@@ -212,7 +212,7 @@ def find_empty_cell(env: Environment, loc: Location) -> list:
                     score = 1 - score if h > item_instance.y else 0
                 elif item_instance.r == 3:
                     score = 1 - score if w < item_instance.x else 0
-            room[h, w] = score
+            room[h, w] = score * weight
     return room
 
     
@@ -225,22 +225,29 @@ def apply(env: Environment, query_str):
     room_instance = env.get(1)
     room_meta = database_map[room_instance.object_id]
     room = np.ones((room_meta.h, room_meta.w), dtype=np.float32)
-    for item in env.to_list():
-        if item["object_id"] < 100:
-            continue
-        item_instance = env.get(item["instance_id"])
-        place_zero(room, item_instance)
 
     if q.mode == "E":
         target_instance = env.get(q.instance_id)
+        for item in env.to_list():
+            if item["object_id"] < 100:
+                continue
+            item_instance = env.get(item["instance_id"])
+            if target_instance.instance_id != item_instance.instance_id:
+                place_zero(room, item_instance)
         if target_instance is None:
             return "수정하려는 가구가 없음"
-        
+        room *= find_empty_cell(env, Location(f"ne{target_instance.instance_id}"))
         for location in q.locations:
             room *= find_empty_cell(env, location)
+    if q.mode == 'A':
+        for item in env.to_list():
+            if item["object_id"] < 100:
+                continue
+            item_instance = env.get(item["instance_id"])
+            place_zero(room, item_instance)
         
-        print(room)
         return
+    print(room)
     
 
 def test():
@@ -252,7 +259,7 @@ def test():
     #     print(query)
     #     res.append(apply(env, query))
     # return res
-    apply(env, "E100 100 un101 le100")
+    apply(env, "E100 100 R3 un101")
 
 test()
 
