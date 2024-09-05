@@ -292,6 +292,7 @@ def apply(env: Environment, query_str):
             item_instance = env.get(item["instance_id"])
             place_zero(room, item_instance)
 
+    print(room)
     cells = find_candidate_cell(room, target_instance)
     cells = sorted(cells, key=lambda x: x["score"], reverse=True)
     if len(cells) == 0:
