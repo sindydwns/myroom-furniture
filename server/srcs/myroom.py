@@ -37,6 +37,11 @@ class Furniture:
         self.w = self.meta.w if self.r % 2 == 0 else self.meta.h
         self.h = self.meta.h if self.r % 2 == 0 else self.meta.w
     
+    def rotate(self, r: int):
+        self.r = (self.r + r + 44444444) % 4
+        self.w = self.meta.w if self.r % 2 == 0 else self.meta.h
+        self.h = self.meta.h if self.r % 2 == 0 else self.meta.w
+    
     def __str__(self):
         return f"{self.object_id} {self.instance_id} {self.x} {self.y} {self.y}"
     
@@ -83,14 +88,12 @@ class Environment:
     def add(self, object_id, instance_id, x, y, r):
         item = None
         for d in database:
-            if d["id"] == object_id:
+            if d.object_id == object_id:
                 item = d
-        w = item["width"]
-        h = item["height"]
         if r % 2 == 1:
             (w, h) = (h, w)
         self.objs.loc[len(self.objs.index)] = [
-            object_id, instance_id, x, y, w, h, r, item["name"]
+            object_id, instance_id, x, y, item.w, item.h, r, item.name
         ]
     
     def remove(self, instance_id):
@@ -132,20 +135,24 @@ class Location:
 
 class Query:
     def __init__(self, query: str):
-        self.valid = False
-        if not query or query[0] not in ['A', 'E', 'D']:
-            return
-        qs = query.split(" ")
-        self.mode = qs[0][0]
-        self.meta: FurnitureMeta = database_map[int(qs[0][1:])]
-        self.instance_id = int(qs[1])
-        self.rotation = 0
-        self.locations: list[Location] = []
-        for q in qs[2:]:
-            if q.startswith("R"):
-                self.rotation = int(q[1:])
-            else:
-                self.locations.append(Location(q))
+        try:
+            print(query)
+            self.valid = False
+            if not query or query[0] not in ['A', 'E', 'D']:
+                return
+            qs = query.split(" ")
+            self.mode = qs[0][0]
+            self.meta: FurnitureMeta = database_map[int(qs[0][1:])]
+            self.instance_id = int(qs[1])
+            self.rotation = 0
+            self.locations: list[Location] = []
+            for q in qs[2:]:
+                if q.startswith("R"):
+                    self.rotation = int(q[1:])
+                else:
+                    self.locations.append(Location(q))
+        except:
+            raise "변환에 실패했습니다."
     
     def __str__(self):
         s = f"{self.mode}{self.meta.object_id} {self.instance_id} R{self.rotation}"
@@ -215,53 +222,126 @@ def find_empty_cell(env: Environment, loc: Location, weight: float = 1.) -> list
             room[h, w] = score * weight
     return room
 
-    
+def find_candidate_cell(room: np, item: Furniture):
+    res = []
+    for room_y in range(room.shape[0]):
+        for room_x in range(room.shape[1]):
+            score = 0
+            err = False
+            for item_y in range(item.h):
+                for item_x in range(item.w):
+                    y = room_y + item_y
+                    x = room_x + item_x
+                    if x >= room.shape[1] or y >= room.shape[0] or room[y, x] == 0:
+                        err = True
+                        break
+                    score += room[y, x].item()
+                if err:
+                    break
+            if not err:
+                res.append({"score": score, "x": room_x, "y": room_y})
+    return res
+                    
 
 def apply(env: Environment, query_str):
     q = Query(query_str)
     if q.mode == "D":
+        target_instance = env.get(q.instance_id)
+        if target_instance is None:
+            print(query_str, "삭제하려는 가구가 없음")
+            return {"id":0, "idx":-1, "x": 0, "y": 0, "r": 0}
         env.remove(q.instance_id)
-        return
+        return {
+            "id": q.meta.object_id,
+            "idx": target_instance.instance_id - 100,
+            "x": target_instance.x,
+            "y": target_instance.y,
+            "r": target_instance.r
+        }
+    
+    
     room_instance = env.get(1)
     room_meta = database_map[room_instance.object_id]
     room = np.ones((room_meta.h, room_meta.w), dtype=np.float32)
 
     if q.mode == "E":
         target_instance = env.get(q.instance_id)
+        if target_instance is None:
+            print(query_str, "수정하려는 가구가 없음")
+            return {"id":0, "idx":-1, "x": 0, "y": 0, "r": 0}
         for item in env.to_list():
             if item["object_id"] < 100:
                 continue
             item_instance = env.get(item["instance_id"])
             if target_instance.instance_id != item_instance.instance_id:
                 place_zero(room, item_instance)
-        if target_instance is None:
-            return "수정하려는 가구가 없음"
-        room *= find_empty_cell(env, Location(f"ne{target_instance.instance_id}"))
+        room *= find_empty_cell(env, Location(f"ne{target_instance.instance_id}"), 0.1)
         for location in q.locations:
             room *= find_empty_cell(env, location)
+        env.remove(q.instance_id)
+        target_instance.rotate(q.rotation)
+        
     if q.mode == 'A':
+        target_instance = Furniture(q.meta.object_id, q.instance_id, 0, 0, q.rotation)
         for item in env.to_list():
             if item["object_id"] < 100:
                 continue
             item_instance = env.get(item["instance_id"])
             place_zero(room, item_instance)
+
+    cells = find_candidate_cell(room, target_instance)
+    cells = sorted(cells, key=lambda x: x["score"], reverse=True)
+    if len(cells) == 0:
+        print(query_str, "불가능한 요청")
+        return {"id":0, "idx":-1, "x": 0, "y": 0, "r": 0}
+    cell = cells[0]
+    env.add(q.meta.object_id, q.instance_id, cell["x"], cell["y"], target_instance.r)
+    if q.mode == 'A':
+        return {
+            "id":q.meta.object_id,
+            "idx":-1,
+            "x": target_instance.x,
+            "y": target_instance.y,
+            "r": target_instance.r,
+        }
+    else:
+        return {
+            "id":q.meta.object_id,
+            "idx":target_instance.instance_id - 100,
+            "x": target_instance.x,
+            "y": target_instance.y,
+            "r": target_instance.r,
+        }
         
-        return
+
+
+def print_env(env: Environment):
+    room_instance = env.get(1)
+    room_meta = database_map[room_instance.object_id]
+    room = np.zeros((room_meta.h, room_meta.w), dtype=np.int32)
+    for o in env.to_list():
+        i, id, x, y, r = o["object_id"], o["instance_id"], o["x"], o["y"], o["r"]
+        meta = database_map[i]
+        w, h = meta.w if r % 4 == 0 else meta.h, meta.h if r % 4 == 0 else meta.w
+        for xx in range(x, x + w):
+            for yy in range(y, y + h):
+                if i >= 100:
+                    room[yy, xx] = id * 1000 + i
     print(room)
     
 
 def test():
     env = Environment("0903_0929_8246068d08_.csv")
-    # m, ms = encode("침대 배치해 줘", env)
-    # queries = m.split("\n")
-    # res = []
-    # for query in queries:
-    #     print(query)
-    #     res.append(apply(env, query))
-    # return res
-    apply(env, "E100 100 R3 un101")
+    m, ms = encode("방에 화분 4개만 추가해줘", env)
+    queries = m.split("\n")
+    res = []
+    for query in queries:
+        print(query)
+        res.append(apply(env, query))
+    print_env(env)
+    return res
 
-test()
+# print(test())
 
 
 

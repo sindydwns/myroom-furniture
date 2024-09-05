@@ -46,17 +46,26 @@ async def predict(data: RequestData):
     instance_id = 100
     for d in data.current:
         env.add(d.id, instance_id, d.x, d.y, d.r)
+        instance_id += 1
     m, ms = encode(data.message, env)
     queries = m.split("\n")
-    res = []
+    _add = []
+    _edit = []
+    _del = []
     for query in queries:
-        res.append(apply(env, query))
+        try:
+            if query.startswith("D"):
+                _del.append(apply(env, query))
+            if query.startswith("E"):
+                _edit.append(apply(env, query))
+            if query.startswith("A"):
+                _add.append(apply(env, query))
+        except BaseException as e:
+            print("error:", e)
+            continue
     return JSONResponse({ 
         "message": ", ".join(queries),
-        "add": [
-            {"id": 1, "x": 0, "y": 0, "r": 0},
-            {"id": 2, "x": 0, "y": 0, "r": 0}
-        ]
+        "add": _add, "edit": _edit, "del": _del
     })
 
 app.mount("/static", StaticFiles(directory="resources/map"), name="static")
