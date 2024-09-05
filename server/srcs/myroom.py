@@ -302,16 +302,16 @@ def apply(env: Environment, query_str):
         return {
             "id":q.meta.object_id,
             "idx":-1,
-            "x": target_instance.x,
-            "y": target_instance.y,
+            "x": cell["x"],
+            "y": cell["y"],
             "r": target_instance.r,
         }
     else:
         return {
             "id":q.meta.object_id,
             "idx":target_instance.instance_id - 100,
-            "x": target_instance.x,
-            "y": target_instance.y,
+            "x": cell["x"],
+            "y": cell["y"],
             "r": target_instance.r,
         }
         
