@@ -193,35 +193,35 @@ def find_empty_cell(env: Environment, loc: Location, weight: float = 1.) -> list
             elif loc.code == "fa":
                 pass
             elif loc.code == "le":
-                score = 1 - score if ghost and w - item_instance.x < h - item_instance.y else 0
+                score = 1 - score if ghost or w - item_instance.x < h - item_instance.y else 0
             elif loc.code == "ri":
-                score = 1 - score if ghost and w - item_instance.x > h - item_instance.y else 0
+                score = 1 - score if ghost or w - item_instance.x > h - item_instance.y else 0
             elif loc.code == "on":
                 th = room.shape[0] - 1 - h
                 iy = room.shape[0] - 1 - item_instance.y
-                score = 1 - score if ghost and w - item_instance.x < th - iy else 0
+                score = 1 - score if ghost or w - item_instance.x < th - iy else 0
             elif loc.code == "un":
                 th = room.shape[0] - 1 - h
                 iy = room.shape[0] - 1 - item_instance.y
-                score = 1 - score if ghost and w - item_instance.x > th - iy else 0
+                score = 1 - score if ghost or w - item_instance.x > th - iy else 0
             elif loc.code == "fr":
                 if item_instance.r == 0:
-                    score = 1 - score if ghost and h > item_instance.y else 0
+                    score = 1 - score if ghost or h > item_instance.y else 0
                 elif item_instance.r == 1:
-                    score = 1 - score if ghost and w < item_instance.x else 0
+                    score = 1 - score if ghost or w < item_instance.x else 0
                 elif item_instance.r == 2:
-                    score = 1 - score if ghost and h < item_instance.y else 0
+                    score = 1 - score if ghost or h < item_instance.y else 0
                 elif item_instance.r == 3:
-                    score = 1 - score if ghost and w > item_instance.x else 0
+                    score = 1 - score if ghost or w > item_instance.x else 0
             elif loc.code == "ba":
                 if item_instance.r == 0:
-                    score = 1 - score if ghost and h > item_instance.y else 0
+                    score = 1 - score if ghost or h > item_instance.y else 0
                 elif item_instance.r == 1:
-                    score = 1 - score if ghost and w < item_instance.x else 0
+                    score = 1 - score if ghost or w < item_instance.x else 0
                 elif item_instance.r == 2:
-                    score = 1 - score if ghost and h > item_instance.y else 0
+                    score = 1 - score if ghost or h > item_instance.y else 0
                 elif item_instance.r == 3:
-                    score = 1 - score if ghost and w < item_instance.x else 0
+                    score = 1 - score if ghost or w < item_instance.x else 0
             room[h, w] = score * weight
     return room
 
