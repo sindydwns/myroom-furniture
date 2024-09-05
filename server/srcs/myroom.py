@@ -86,14 +86,16 @@ class Environment:
         return lst
     
     def add(self, object_id, instance_id, x, y, r):
-        item = None
-        for d in database:
-            if d.object_id == object_id:
-                item = d
-        if r % 2 == 1:
-            (w, h) = (h, w)
+        new_item = Furniture(object_id, instance_id, x, y, r)
         self.objs.loc[len(self.objs.index)] = [
-            object_id, instance_id, x, y, item.w, item.h, r, item.name
+            new_item.object_id,
+            new_item.instance_id,
+            new_item.x,
+            new_item.y,
+            new_item.w,
+            new_item.h,
+            new_item.r,
+            new_item.meta.name
         ]
     
     def remove(self, instance_id):
