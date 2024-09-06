@@ -170,7 +170,7 @@ def place_zero(room: np, item: Furniture):
             if x + w < room.shape[1] and y + h < room.shape[0]:
                 room[y + h, x + w] = 0
 
-def find_empty_cell(env: Environment, loc: Location, weight: float = 1.) -> list:
+def calc_cell_score(env: Environment, loc: Location, weight: float = 1.) -> list:
     
     room_instance = env.get(1)
     room_meta = database_map[room_instance.object_id]
@@ -191,6 +191,7 @@ def find_empty_cell(env: Environment, loc: Location, weight: float = 1.) -> list
             if loc.code == "ne" or loc.code == "in" or loc.code == "ce":
                 score = 1 - score
             elif loc.code == "fa":
+                print(score)
                 pass
             elif loc.code == "le":
                 score = 1 - score if ghost or w - item_instance.x < h - item_instance.y else 0
@@ -278,9 +279,11 @@ def apply(env: Environment, query_str):
             item_instance = env.get(item["instance_id"])
             if target_instance.instance_id != item_instance.instance_id:
                 place_zero(room, item_instance)
-        room *= find_empty_cell(env, Location(f"ne{target_instance.instance_id}"), 0.1)
+                print(room)
+        room *= calc_cell_score(env, Location(f"ne{target_instance.instance_id}"), 0.1)
         for location in q.locations:
-            room *= find_empty_cell(env, location)
+            room *= calc_cell_score(env, location)
+            print(room)
         env.remove(q.instance_id)
         target_instance.rotate(q.rotation)
         
@@ -291,6 +294,9 @@ def apply(env: Environment, query_str):
                 continue
             item_instance = env.get(item["instance_id"])
             place_zero(room, item_instance)
+        for location in q.locations:
+            room *= calc_cell_score(env, location)
+            print(room)
 
     print(room)
     cells = find_candidate_cell(room, target_instance)
@@ -336,16 +342,15 @@ def print_env(env: Environment):
 
 def test():
     env = Environment("0903_0929_8246068d08_.csv")
-    m, ms = encode("방에 화분 4개만 추가해줘", env)
+    m, ms = encode("쓰레기통 멀리에 새로운 쓰레기통을 둬", env)
     queries = m.split("\n")
     res = []
     for query in queries:
-        print(query)
         res.append(apply(env, query))
     print_env(env)
     return res
 
-# print(test())
+print(test())
 
 
 
