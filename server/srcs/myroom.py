@@ -191,7 +191,6 @@ def calc_cell_score(env: Environment, loc: Location, weight: float = 1.) -> list
             if loc.code == "ne" or loc.code == "in" or loc.code == "ce":
                 score = 1 - score
             elif loc.code == "fa":
-                print(score)
                 pass
             elif loc.code == "le":
                 score = 1 - score if ghost or w - item_instance.x < h - item_instance.y else 0
@@ -350,7 +349,7 @@ def test():
     print_env(env)
     return res
 
-print(test())
+# print(test())
 
 
 
