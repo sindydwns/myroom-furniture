@@ -2,7 +2,6 @@ from openai import OpenAI
 import pandas as pd
 import json
 import os
-import csv
 import util
 import numpy as np
 import math
@@ -68,26 +67,26 @@ class Environment:
         self.base_env_path = "resources/environment.csv"
         self.preset_env_dir_path = "resources/presets/"
         if ignore_base:
-            self.objs = pd.read_csv(self.preset_env_dir_path + filename)
+            self.aaaaaaaaaaaa = pd.read_csv(self.preset_env_dir_path + filename)
         else:
             env = pd.read_csv(self.base_env_path)
             if filename:
                 add_env = pd.read_csv(self.preset_env_dir_path + filename)
                 env = pd.concat([env, add_env], ignore_index=True)
-            self.objs = env
+            self.aaaaaaaaaaaa = env
     
     def __str__(self) -> str:
-        return self.objs.to_csv(index=False)
+        return self.aaaaaaaaaaaa.to_csv(index=False)
     
     def to_list(self):
         lst = []
-        for _, r in self.objs.iterrows():
+        for _, r in self.aaaaaaaaaaaa.iterrows():
             lst.append({"object_id": r.iloc[0], "instance_id": r.iloc[1], "x": r.iloc[2], "y": r.iloc[3], "r": r.iloc[6]})
         return lst
     
     def add(self, object_id, instance_id, x, y, r):
         new_item = Furniture(object_id, instance_id, x, y, r)
-        self.objs.loc[len(self.objs.index)] = [
+        self.aaaaaaaaaaaa.loc[len(self.aaaaaaaaaaaa.index)] = [
             new_item.object_id,
             new_item.instance_id,
             new_item.x,
@@ -99,10 +98,10 @@ class Environment:
         ]
     
     def remove(self, instance_id):
-        self.objs = self.objs[self.objs["instance_id"] != int(instance_id)]
+        self.aaaaaaaaaaaa = self.aaaaaaaaaaaa[self.aaaaaaaaaaaa["instance_id"] != int(instance_id)]
     
     def get(self, instance_id) -> Furniture:
-        for i, o in self.objs.iterrows():
+        for i, o in self.aaaaaaaaaaaa.iterrows():
             if o["instance_id"] == instance_id:
                 return Furniture(o["object_id"], o["instance_id"], o["x"], o["y"], o["rotation"])
         return None
@@ -110,7 +109,7 @@ class Environment:
     def save(self, filename=None):
         if filename is None:
             filename = util.create_filename(".csv")
-        self.objs.to_csv(self.preset_env_dir_path + filename, index=False)
+        self.aaaaaaaaaaaa.to_csv(self.preset_env_dir_path + filename, index=False)
         return filename
         
 def encode(q, env: Environment):
@@ -349,69 +348,4 @@ def test():
     print_env(env)
     return res
 
-# print(test())
-
-
-
-
-
-
-
-
-import random
-import pandas as pd
-from pandas import DataFrame
-def get_meta(meta_id):
-    for item in database:
-        if item["id"] == meta_id:
-            return item
-    return None
-def get_random_meta(callable):
-    a = list(filter(lambda x: callable(x), database))
-    return random.choice(a)
-def get_random_instance_id(data, min):
-    data = data[data["object_id"] >= min]
-    data = data.sample(n=1)
-    return data["object_id"].iloc[0], data["instance_id"].iloc[0]
-def get_random_location():
-    a = ["ne","fa","le","ri","fr","ba"]
-    return random.choice(a)
-def get_random_rotation():
-    a = [0,1,2,3]
-    return random.choice(a)
-def create_question(env: Environment):
-    if len(env.objs.index) > 28:
-        return "이 방안에 있는 가구 하나를 없애주세요"
-    data: DataFrame = env.objs
-    data = data[data["object_id"] >= 100]
-    next_instance_id = 100 if len(data.index) == 0 else data["instance_id"].max() + 1
-    
-    new_item = get_random_meta(lambda x: x["id"] >= 100)    
-    
-    num = random.random()
-    if num < 0.25: # 추가 배치 (끝)
-        new_item = get_random_meta(lambda x: x["id"] >= 100)
-        rotation = get_random_rotation()
-        return f"A{new_item['id']} {next_instance_id} R{rotation}"
-    elif num < 0.5: # 추가 배치 (location)
-        if len(data.index) == 0:
-            return create_question(env)
-        new_item = get_random_meta(lambda x: x["id"] >= 100)
-        rotation = get_random_rotation()
-        _, instance = get_random_instance_id(env.objs, 0)
-        location = get_random_location()
-        return f"A{new_item['id']} {next_instance_id} R{rotation} {location}{instance}"
-    elif num < 0.75: # 가구 수정
-        if len(data.index) == 0:
-            return create_question(env)
-        target_object, target = get_random_instance_id(data, 100)
-        rotation = get_random_rotation()
-        return f"E{target_object} {target} R{rotation}"
-    else: # 가구 수정 (location)
-        if len(data.index) == 0:
-            return create_question(env)
-        target_object, target = get_random_instance_id(data, 100)
-        rotation = get_random_rotation()
-        _, instance = get_random_instance_id(env.objs, 0)
-        location = get_random_location()
-        return f"E{target_object} {target} R{rotation} {location}{instance}"
+print(test())
