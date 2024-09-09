@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from myroom import encode, apply, Environment
+from myroom import encode, apply, to_numpy, Environment
 from stt import to_text
 from pydantic import BaseModel
 import os
@@ -9,6 +9,8 @@ import uvicorn
 from uuid import uuid4
 from datetime import datetime
 import threading
+from models import Query
+import util
 lock = threading.Lock()
 
 class Furniture(BaseModel):
@@ -49,27 +51,29 @@ async def predict(data: RequestData):
     _edit = []
     _del = []
     try:
-        m, ms = encode(data.message, env)
-        queries = m.split("\n")
+        m, _ = encode(data.message, env)
+        query_strs = m.split("\n")
     except BaseException as e:
-        print(data.message)
+        print(data.message, e)
         return JSONResponse({ 
             "message": "no request",
             "add": _add, "edit": _edit, "del": _del
         })
+    queries = Query.refine_queries(query_strs)
     for query in queries:
-        try:
-            if query.startswith("D"):
-                _del.append(apply(env, query))
-            if query.startswith("E"):
-                _edit.append(apply(env, query))
-            if query.startswith("A"):
-                _add.append(apply(env, query))
-        except BaseException as e:
-            print("error:", e)
+        query_res = apply(env, query)
+        if query_res is None:
             continue
+        if query.mode == 'D':
+            _del.append(query_res)
+        if query.mode == 'E':
+            _edit.append(query_res)
+        if query.mode == 'A':
+            _add.append(query_res)
+    room = to_numpy(env)
+    util.print_list("=== 최종 방 모습 ===", room)
     return JSONResponse({ 
-        "message": ", ".join(queries),
+        "message": ", ".join(query_strs),
         "add": _add, "edit": _edit, "del": _del
     })
 

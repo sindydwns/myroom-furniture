@@ -118,8 +118,8 @@ class Location:
 class Query:
     def __init__(self, query: str):
         try:
-            print(query)
             self.valid = False
+            self.query_str = query
             if not query or query[0] not in ['A', 'E', 'D']:
                 return
             qs = query.split(" ")
@@ -135,11 +135,24 @@ class Query:
                     self.rotation_manual = True
                 else:
                     self.locations.append(Location(q))
+            self.valid = True
         except:
-            raise "변환에 실패했습니다."
+            self.valid = False
 
     def __str__(self):
-        s = f"{self.mode}{self.meta.object_id} {self.instance_id} R{self.rotation}"
+        s = f"{self.mode}{self.meta.object_id} {self.instance_id}"
+        if self.rotation_manual:
+            s += f" R{self.rotation}"
         for lo in self.locations:
-            s += f"{lo.code}{lo.instance_id}"
+            s += f" {lo.code}{lo.instance_id}"
         return s
+    
+    def refine_queries(query_strs: list[str]) -> list["Query"]:
+        queries = []
+        for query_str in query_strs:
+            query = Query(query_str)
+            if query.valid == False:
+                print("invalid", query.query_str)
+                continue
+            queries.append(query)
+        return queries

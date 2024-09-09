@@ -51,4 +51,3 @@ def read_file_to_text(filename):
 def read_file_to_json(filename):
     with open(filename, "r") as file:
         return json.load(file)
-
