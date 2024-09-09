@@ -20,8 +20,8 @@ def encode(q, env: Environment):
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "system", "content": fewshot},
-        {"role": "system", "content": "\n*** 환경정보.csv ***\n" + env.to_csv()},
         {"role": "system", "content": "\n*** 메타데이타_정보.csv ***\n" + database.to_csv()},
+        {"role": "system", "content": "\n*** 환경정보.csv ***\n" + env.to_csv()},
         {"role": "user", "content": query_prompt},
     ]
     completion = client.chat.completions.create(model=model, messages=messages, temperature=0)
@@ -208,7 +208,7 @@ def to_numpy(env: Environment):
     
 
 def test(env: Environment, message: str):
-    m, _ = encode(message, env) 
+    m, _ = encode(message, env)
     queries = m.split("\n")
     res = []
     for query in queries:
