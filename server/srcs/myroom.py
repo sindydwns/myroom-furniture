@@ -338,9 +338,8 @@ def print_env(env: Environment):
     print(room)
     
 
-def test():
-    env = Environment("0903_0929_8246068d08_.csv")
-    m, ms = encode("쓰레기통 멀리에 새로운 쓰레기통을 둬", env)
+def test(env: Environment, message: str):
+    m, _ = encode(message, env)
     queries = m.split("\n")
     res = []
     for query in queries:
@@ -348,4 +347,5 @@ def test():
     print_env(env)
     return res
 
-print(test())
+if __name__ == "__main__":
+    print(test(Environment(), "쓰레기통 멀리에 새로운 쓰레기통을 둬"))
