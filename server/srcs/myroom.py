@@ -192,7 +192,7 @@ def apply(env: Environment, query_str):
             "r": target_instance.r,
         }
         
-def print_env(env: Environment):
+def to_numpy(env: Environment):
     room_instance = env.get(1)
     room_meta = database.get(room_instance.object_id)
     room = np.zeros((room_meta.h, room_meta.w), dtype=np.int32)
@@ -204,7 +204,7 @@ def print_env(env: Environment):
             for yy in range(y, y + h):
                 if i >= 100:
                     room[yy, xx] = i * 1000 + id
-    print(room)
+    return room
     
 
 def test(env: Environment, message: str):
@@ -213,9 +213,10 @@ def test(env: Environment, message: str):
     res = []
     for query in queries:
         res.append(apply(env, query))
-    print_env(env)
+    room = to_numpy(env)
+    print(room)
     return res
 
 if __name__ == "__main__":
-    print(test(Environment(), "침대를 둬"))
-
+    res = test(Environment(), "침대를 둬")
+    print(res)
