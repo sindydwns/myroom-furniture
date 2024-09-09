@@ -205,17 +205,13 @@ def to_numpy(env: Environment):
     
 
 def test(env: Environment, message: str):
-    res = []
     before = to_numpy(env)
     m, _ = encode(message, env)
     query_strs = m.split("\n")
     queries = Query.refine_queries(query_strs)
     util.print_list("처리할 요청:", queries)
-    for query in queries:
-        query_res = apply(env, query)
-        if query_res is None:
-            continue
-        res.append(query_res)
+    _add, _edit, _del = Query.invoke_queries(env, queries, apply)
+    res = [*_add, *_edit, *_del]
     after = to_numpy(env)
     util.print_list("=== 이전 방 모습 ===", before)
     util.print_list("=== 최종 방 모습 ===", after)

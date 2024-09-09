@@ -156,3 +156,24 @@ class Query:
                 continue
             queries.append(query)
         return queries
+    
+    def invoke_queries(env: Environment, queries: list["Query"], apply: callable):
+        _add = []
+        _edit = []
+        _del = []
+        for query in queries:
+            if query.mode in ['E', 'D']:
+                instance = env.get(query.instance_id)
+                if instance is not None:
+                    instance.ghost = True
+        for i, query in enumerate(queries):
+            query_res = apply(env, query)
+            if query_res is None:
+                continue
+            if query.mode == 'D':
+                _del.append(query_res)
+            if query.mode == 'E':
+                _edit.append(query_res)
+            if query.mode == 'A':
+                _add.append(query_res)
+        return _add, _edit, _del

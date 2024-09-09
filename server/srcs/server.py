@@ -57,19 +57,10 @@ async def predict(data: RequestData):
         print(data.message, e)
         return JSONResponse({ 
             "message": "no request",
-            "add": _add, "edit": _edit, "del": _del
+            "add": [], "edit": [], "del": []
         })
     queries = Query.refine_queries(query_strs)
-    for query in queries:
-        query_res = apply(env, query)
-        if query_res is None:
-            continue
-        if query.mode == 'D':
-            _del.append(query_res)
-        if query.mode == 'E':
-            _edit.append(query_res)
-        if query.mode == 'A':
-            _add.append(query_res)
+    _add, _edit, _del = Query.invoke_queries(env, queries, apply)
     room = to_numpy(env)
     util.print_list("=== 최종 방 모습 ===", room)
     return JSONResponse({ 
