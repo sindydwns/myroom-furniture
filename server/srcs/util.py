@@ -1,6 +1,20 @@
+import numpy as np
 import uuid
 import json
 from datetime import datetime
+
+def print_list(title: str, lst: list|np.ndarray):
+    if type(lst) is np.ndarray:
+        print(title)
+        print(lst)
+        return
+    if len(lst) == 0:
+        print(title, " [ ]")
+        return
+    print(title, " [")
+    for item in lst:
+        print("  ", item)
+    print("]")
 
 def parse(str: str):
     strs = str.split(" ")

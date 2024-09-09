@@ -208,15 +208,15 @@ def to_numpy(env: Environment):
     
 
 def test(env: Environment, message: str):
-    m, _ = encode(message, env)
+    m, _ = encode(message, env) 
     queries = m.split("\n")
     res = []
     for query in queries:
         res.append(apply(env, query))
     room = to_numpy(env)
-    print(room)
+    util.print_list("=== 최종 방 모습 ===", room)
     return res
 
 if __name__ == "__main__":
     res = test(Environment(), "침대를 둬")
-    print(res)
+    util.print_list("테스트 결과:", res)
