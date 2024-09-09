@@ -4,10 +4,10 @@ services:
     build: server
     volumes:
       - ./server:/app
-    ports:
-      - 8000:8000
     env_file:
       - .env
+    ports:
+      - ${PORT}:8000
     deploy:
       resources:
         reservations:
