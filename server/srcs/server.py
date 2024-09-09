@@ -47,11 +47,18 @@ async def predict(data: RequestData):
     for d in data.current:
         env.add(d.id, instance_id, d.x, d.y, d.r)
         instance_id += 1
-    m, ms = encode(data.message, env)
-    queries = m.split("\n")
     _add = []
     _edit = []
     _del = []
+    try:
+        m, ms = encode(data.message, env)
+        queries = m.split("\n")
+    except BaseException as e:
+        print(data.message)
+        return JSONResponse({ 
+            "message": "no request",
+            "add": _add, "edit": _edit, "del": _del
+        })
     for query in queries:
         try:
             if query.startswith("D"):
