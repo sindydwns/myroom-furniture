@@ -1,3 +1,4 @@
+server/srcs/resources/presets/*_.csv
 upload/
 myroom/
 server/srcs/resources/responses.txt
