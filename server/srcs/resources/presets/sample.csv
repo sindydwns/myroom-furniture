@@ -1,0 +1,4 @@
+object_id,instance_id,x,y,rotation,comment
+100,100,4,0,0,침대
+110,101,1,0,0,쓰레기통
+103,102,0,3,3,소파

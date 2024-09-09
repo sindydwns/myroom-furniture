@@ -1,4 +1,5 @@
 import uuid
+import json
 from datetime import datetime
 
 def parse(str: str):
@@ -28,3 +29,12 @@ def create_filename(suffix):
     unique_id = uuid.uuid4().hex[:10]
     file_name = f"{date_str}_{unique_id}_{suffix}"
     return file_name
+
+def read_file_to_text(filename):
+    with open(filename, "r") as file:
+        return file.read()
+
+def read_file_to_json(filename):
+    with open(filename, "r") as file:
+        return json.load(file)
+
