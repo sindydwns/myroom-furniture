@@ -2,18 +2,20 @@ import csv
 import util
 
 class FurnitureMeta:
-    def __init__(self, object_id, name, w, h):
+    def __init__(self, object_id, name, w, h, ghost=False):
         self.object_id = int(object_id)
         self.name = name
         self.w = int(w)
         self.h = int(h)
+        self.ghost = ghost
     
     def to_dict(self):
         return {
             "object_id": self.object_id,
             "name": self.name,
             "width": self.w,
-            "height": self.h
+            "height": self.h,
+            "ghost": self.ghost,
         }
     
     def __str__(self):
@@ -39,16 +41,16 @@ class Database:
 database = Database("resources/items.json")
 
 class Furniture:
-    def __init__(self, object_id, instance_id, x, y, r, comment = ""):
+    def __init__(self, object_id, instance_id, x, y, r, comment = "", ghost = False):
         self.meta = database.get(object_id)
         self.object_id = object_id
         self.instance_id = instance_id
         self.x = x
         self.y = y
         self.r = r
-        self.w = self.meta.w if self.r % 2 == 0 else self.meta.h
-        self.h = self.meta.h if self.r % 2 == 0 else self.meta.w
+        self.rotate(r)
         self.comment = comment
+        self.ghost = ghost
     
     def rotate(self, r: int):
         self.r = (self.r + r + 44444444) % 4
@@ -125,10 +127,12 @@ class Query:
             self.meta: FurnitureMeta = database.get(int(qs[0][1:]))
             self.instance_id = int(qs[1])
             self.rotation = 0
+            self.rotation_manual = False
             self.locations: list[Location] = []
             for q in qs[2:]:
                 if q.startswith("R"):
                     self.rotation = int(q[1:])
+                    self.rotation_manual = True
                 else:
                     self.locations.append(Location(q))
         except:
