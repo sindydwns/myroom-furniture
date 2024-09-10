@@ -130,7 +130,6 @@ def find_candidate_cell(room: np, item: Furniture):
                     
 def apply(env: Environment, query: Query):
     print(f"\n--------- {query.query_str} ---------")
-    util.print_list("(result)", [str(x) for x in env.to_list()])
     if query.mode == "D":
         target_instance = env.get(query.instance_id)
         target_instance.ghost = True
@@ -215,6 +214,6 @@ if __name__ == "__main__":
     res = test_cmd(env, [
         Query("A100 100"),
         Query("A100 101"),
-        Query("E100 101 R2")
+        Query("E100 100 R2")
     ])
     util.print_list("테스트 결과:", res)
