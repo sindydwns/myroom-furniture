@@ -18,13 +18,16 @@ class FurnitureMeta:
             "ghost": self.ghost,
         }
     
-    def __str__(self):
+    def to_csv_line(self):
         return f"{self.object_id},{self.name},{self.w},{self.h}"
+    
+    def __str__(self):
+        return f"{self.object_id},{self.name},{self.w},{self.h},{self.ghost}"
 
 class Database:
     def __init__(self, filename):
         self.datas = util.read_file_to_json(filename)["objects"]
-        lam = lambda x: FurnitureMeta(x["id"], x["name"], x["width"], x["height"])
+        lam = lambda x: FurnitureMeta(x["id"], x["name"], x["width"], x["height"], x["ghost"])
         self.datas = list(map(lam, self.datas))
         self.data_map: dict[int, FurnitureMeta] = {}
         for item in self.datas:
@@ -35,30 +38,36 @@ class Database:
     
     def to_csv(self):
         header = ",".join(["object_id", "name", "width", "height"])
-        lines = [ str(x) for x in self.datas ]
+        lines = [ x.to_csv_line() for x in self.datas ]
         return "\n".join([header, *lines])
 
 database = Database("resources/items.json")
 
 class Furniture:
-    def __init__(self, object_id, instance_id, x, y, r, comment = "", ghost = False):
+    def __init__(self, object_id, instance_id, x, y, r, comment = "", ghost = None):
         self.meta = database.get(object_id)
         self.object_id = object_id
         self.instance_id = instance_id
         self.x = x
         self.y = y
         self.r = r
-        self.rotate(r)
+        self.w = self.meta.w if self.r % 2 == 0 else self.meta.h
+        self.h = self.meta.h if self.r % 2 == 0 else self.meta.w
         self.comment = comment
-        self.ghost = ghost
+        if ghost is None:
+            self.ghost = self.meta.ghost
+        else:
+            self.ghost = ghost
     
     def rotate(self, r: int):
-        self.r = (self.r + r + 44444444) % 4
+        self.r = (self.r + r + 4) % 4
         self.w = self.meta.w if self.r % 2 == 0 else self.meta.h
         self.h = self.meta.h if self.r % 2 == 0 else self.meta.w
     
-    def __str__(self):
+    def to_csv_line(self):
         return f"{self.object_id},{self.instance_id},{self.x},{self.y},{self.r},{self.comment}"
+    def __str__(self):
+        return f"{self.object_id},{self.instance_id},{self.x},{self.y},{self.r},{self.comment},{self.ghost}"
 
 
 def csv_to_furniture(filename):
@@ -83,22 +92,29 @@ class Environment:
     
     def to_csv(self):
         header = ",".join(["object_id", "instance_id", "x", "y", "rotation", "comment"])
-        lines = [ str(x) for x in self.objs ]
+        lines = [ x.to_csv_line() for x in self.objs ]
         return "\n".join([header, *lines])
     
-    def to_list(self):
+    def __str__(self):
+        lines = [ str(x) for x in self.objs ]
+        return "\n".join(lines)
+    
+    def to_list(self, _filter=None):
+        if _filter is not None:
+            return list(filter(_filter, self.objs))
         return self.objs
     
     def add(self, furniture: Furniture):
         self.objs.append(furniture)
         return self
 
-    def remove(self, instance_id):
-        self.objs = list(filter(lambda x: x.instance_id != instance_id, self.objs))
+    def remove(self, call):
+        self.objs = list(filter(lambda x: call(x), self.objs))
         return self
     
     def get(self, instance_id) -> Furniture:
-        for furniture in self.to_list():
+        for i in range(len(self.objs)):
+            furniture = self.objs[i]
             if furniture.instance_id == instance_id:
                 return furniture
         return None
@@ -152,10 +168,27 @@ class Query:
         for query_str in query_strs:
             query = Query(query_str)
             if query.valid == False:
-                print("invalid", query.query_str)
+                print("invalid:", query.query_str)
                 continue
             queries.append(query)
         return queries
+    
+    def filter_queries(env: Environment, queries: list["Query"]):
+        res = []
+        for query in queries:
+            if query.mode == 'A':
+                res.append(query)
+                continue
+            instance = env.get(query.instance_id)
+            if instance is not None:
+                res.append(query)
+                continue
+            item = util.find(res, lambda x: x.instance_id == instance.instance_id)
+            if item is not None:
+                res.append(query)
+                continue
+            print("drop:", query)
+        return res
     
     def invoke_queries(env: Environment, queries: list["Query"], apply: callable):
         _add = []
@@ -176,4 +209,12 @@ class Query:
                 _edit.append(query_res)
             if query.mode == 'A':
                 _add.append(query_res)
+            # for i in range(i, len(queries)):
+            #     next_query = queries[i]
+            #     if next_query.mode == 'A':
+            #         continue
+            #     if next_query.instance_id != query.instance_id:
+            #         continue
+            #     env.get(query.instance_id).ghost = True
+            #     break
         return _add, _edit, _del

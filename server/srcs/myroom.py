@@ -14,6 +14,20 @@ print("model:", model)
 
 system_prompt = util.read_file_to_text("resources/prompt.txt")
 fewshot = util.read_file_to_text("resources/fewshot.txt")
+
+def to_numpy(env: Environment):
+    room_instance = env.get(1)
+    room = np.zeros((room_instance.meta.h, room_instance.meta.w), dtype=np.int32)
+    for o in env.to_list():
+        i, id, x, y, r = o.object_id, o.instance_id, o.x, o.y, o.r
+        meta = database.get(i)
+        w, h = meta.w if r % 2 == 0 else meta.h, meta.h if r % 2 == 0 else meta.w
+        for xx in range(x, x + w):
+            for yy in range(y, y + h):
+                if i >= 100:
+                    room[yy, xx] = i * 1000 + id
+    return room
+    
         
 def encode(q, env: Environment):
     query_prompt = "사용자의 요청: " + q
@@ -43,8 +57,7 @@ def place_zero(room: np, item: Furniture):
 def calc_cell_score(env: Environment, loc: Location, weight: float = 1.) -> list:
     
     room_instance = env.get(1)
-    room_meta = database.get(room_instance.object_id)
-    room = np.zeros((room_meta.h, room_meta.w), dtype=np.float32)
+    room = np.zeros((room_instance.meta.h, room_instance.meta.w), dtype=np.float32)
     
     item_instance = env.get(loc.instance_id)
 
@@ -53,8 +66,8 @@ def calc_cell_score(env: Environment, loc: Location, weight: float = 1.) -> list
     c = (center_x, center_y)
     max_len = math.sqrt(pow(room.shape[1], 2) + pow(room.shape[0], 2))
     
-    for w in range(room_meta.w):
-        for h in range(room_meta.h):
+    for w in range(room_instance.meta.w):
+        for h in range(room_instance.meta.h):
             p = (w, h)
             score = math.dist(c, p) / max_len
             ghost = item_instance.instance_id < 100
@@ -116,12 +129,12 @@ def find_candidate_cell(room: np, item: Furniture):
     return res
                     
 def apply(env: Environment, query: Query):
+    print(f"\n--------- {query.query_str} ---------")
+    util.print_list("(result)", [str(x) for x in env.to_list()])
     if query.mode == "D":
         target_instance = env.get(query.instance_id)
-        if target_instance is None:
-            print(query, "삭제하려는 가구가 없음")
-            return None
-        env.remove(query.instance_id)
+        target_instance.ghost = True
+        util.print_list("(result)", [str(x) for x in env.to_list()])
         return {
             "id": query.meta.object_id,
             "idx": target_instance.instance_id - 100,
@@ -129,94 +142,79 @@ def apply(env: Environment, query: Query):
             "y": target_instance.y,
             "r": target_instance.r
         }
-    
-    
+
+    target_instance = env.get(query.instance_id)
+    if target_instance is not None:
+        target_instance.ghost = True
+    if target_instance is None and query.mode in ['E', 'D']:
+        print("(error)", "수정 또는 삭제 불가")
+        return None
+
     room_instance = env.get(1)
-    room_meta = database.get(room_instance.object_id)
-    room = np.ones((room_meta.h, room_meta.w), dtype=np.float32)
+    room = np.ones((room_instance.meta.h, room_instance.meta.w), dtype=np.float32)
+    for item in env.to_list(lambda x: x.ghost == False):
+        place_zero(room, item)
 
-    if query.mode == "E":
-        target_instance = env.get(query.instance_id)
-        if target_instance is None:
-            print(query, "수정하려는 가구가 없음")
-            return None
-        for item in env.to_list():
-            if item.object_id < 100:
-                continue
-            item_instance = env.get(item.instance_id)
-            if target_instance.instance_id != item_instance.instance_id:
-                place_zero(room, item_instance)
-                print(room)
+    if query.mode == 'E':
         room *= calc_cell_score(env, Location(f"ne{target_instance.instance_id}"), 0.1)
-        for location in query.locations:
-            room *= calc_cell_score(env, location)
-            print(room)
-        env.remove(query.instance_id)
-        target_instance.rotate(query.rotation)
-        
-    if query.mode == 'A':
-        target_instance = Furniture(query.meta.object_id, query.instance_id, 0, 0, query.rotation)
-        for item in env.to_list():
-            if item.object_id < 100:
-                continue
-            item_instance = env.get(item.instance_id)
-            place_zero(room, item_instance)
-        for location in query.locations:
-            room *= calc_cell_score(env, location)
+    for location in query.locations:
+        room *= calc_cell_score(env, location)
 
-    cells = find_candidate_cell(room, target_instance)
+    new_instance = Furniture(query.meta.object_id, query.instance_id, 0, 0, 0)
+    if query.rotation_manual:
+        new_instance.rotate(query.rotation)
+
+    cells = find_candidate_cell(room, new_instance)
     cells = sorted(cells, key=lambda x: x["score"], reverse=True)
     if len(cells) == 0:
-        print(query, "불가능한 요청")
+        print("(error)", "불가능한 요청")
         return None
     cell = cells[0]
-    furniture = Furniture(query.meta.object_id, query.instance_id, cell["x"], cell["y"], target_instance.r)
-    env.add(furniture)
+    new_instance.x = cell["x"]
+    new_instance.y = cell["y"]
+    env.add(new_instance)
+    util.print_list("(score)", room)
+    util.print_list("(result)", [str(x) for x in env.to_list()])
+    
     if query.mode == 'A':
         return {
             "id":query.meta.object_id,
             "idx":-1,
-            "x": cell["x"],
-            "y": cell["y"],
-            "r": target_instance.r,
+            "x": cell["x"], "y": cell["y"], "r": new_instance.r,
         }
     else:
         return {
             "id":query.meta.object_id,
-            "idx":target_instance.instance_id - 100,
-            "x": cell["x"],
-            "y": cell["y"],
-            "r": target_instance.r,
+            "idx":new_instance.instance_id - 100,
+            "x": cell["x"], "y": cell["y"], "r": new_instance.r,
         }
         
-def to_numpy(env: Environment):
-    room_instance = env.get(1)
-    room_meta = database.get(room_instance.object_id)
-    room = np.zeros((room_meta.h, room_meta.w), dtype=np.int32)
-    for o in env.to_list():
-        i, id, x, y, r = o.object_id, o.instance_id, o.x, o.y, o.r
-        meta = database.get(i)
-        w, h = meta.w if r % 4 == 0 else meta.h, meta.h if r % 4 == 0 else meta.w
-        for xx in range(x, x + w):
-            for yy in range(y, y + h):
-                if i >= 100:
-                    room[yy, xx] = i * 1000 + id
-    return room
-    
-
-def test(env: Environment, message: str):
+def test_cmd(env: Environment, queries: list[Query]):
     before = to_numpy(env)
+    util.print_list("query list:", queries)
+    _add, _edit, _del = Query.invoke_queries(env, queries, apply)
+    res = [*_add, *_edit, *_del]
+    env.remove(lambda x: x.object_id < 100 or x.ghost == False)
+    after = to_numpy(env)
+    util.print_list("\n========= 이전 방 모습 =========", before)
+    util.print_list("\n========= 최종 방 모습 =========", after)
+    return res
+
+def test_all(env: Environment, message: str):
     m, _ = encode(message, env)
     query_strs = m.split("\n")
     queries = Query.refine_queries(query_strs)
-    util.print_list("처리할 요청:", queries)
-    _add, _edit, _del = Query.invoke_queries(env, queries, apply)
-    res = [*_add, *_edit, *_del]
-    after = to_numpy(env)
-    util.print_list("=== 이전 방 모습 ===", before)
-    util.print_list("=== 최종 방 모습 ===", after)
+    queries = Query.filter_queries(env, queries)
+    res = test_cmd(env, queries)
     return res
 
 if __name__ == "__main__":
-    res = test(Environment(), "침대를 둬")
+    # res = test_all(Environment(), "침대를 둬")
+    
+    env = Environment()
+    res = test_cmd(env, [
+        Query("A100 100"),
+        Query("A100 101"),
+        Query("E100 101 R2")
+    ])
     util.print_list("테스트 결과:", res)

@@ -60,6 +60,7 @@ async def predict(data: RequestData):
             "add": [], "edit": [], "del": []
         })
     queries = Query.refine_queries(query_strs)
+    queries = Query.filter_queries(env, queries)
     _add, _edit, _del = Query.invoke_queries(env, queries, apply)
     room = to_numpy(env)
     util.print_list("=== 최종 방 모습 ===", room)
