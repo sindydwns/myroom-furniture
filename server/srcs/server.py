@@ -43,12 +43,14 @@ async def stt(audio: UploadFile):
 
 @app.post("/api/v1/prediction")
 async def predict(data: RequestData):
+    print("\n\n*********************************************************\n")
     env = Environment()
     instance_id = 100
     for d in data.current:
         new_instance = Fur(d.id, instance_id, d.x, d.y, d.r)
         env.add(new_instance)
         instance_id += 1
+    start_env = to_numpy(env)
     _add = []
     _edit = []
     _del = []
@@ -65,7 +67,9 @@ async def predict(data: RequestData):
     queries = Query.filter_queries(env, queries)
     _add, _edit, _del = Query.invoke_queries(env, queries, apply)
     room = to_numpy(env)
+    util.print_list("=== 초기 방 모습 ===", start_env)
     util.print_list("=== 최종 방 모습 ===", room)
+    util.print_list("req:", query_strs)
     util.print_list("_add:", _add)
     util.print_list("_edit:", _edit)
     util.print_list("_del:", _del)
