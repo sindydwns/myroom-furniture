@@ -10,6 +10,7 @@ from uuid import uuid4
 from datetime import datetime
 import threading
 from models import Query
+from models import Furniture as Fur
 import util
 lock = threading.Lock()
 
@@ -45,7 +46,8 @@ async def predict(data: RequestData):
     env = Environment()
     instance_id = 100
     for d in data.current:
-        env.add(d.id, instance_id, d.x, d.y, d.r)
+        new_instance = Fur(d.id, instance_id, d.x, d.y, d.r)
+        env.add(new_instance)
         instance_id += 1
     _add = []
     _edit = []
@@ -64,6 +66,9 @@ async def predict(data: RequestData):
     _add, _edit, _del = Query.invoke_queries(env, queries, apply)
     room = to_numpy(env)
     util.print_list("=== 최종 방 모습 ===", room)
+    util.print_list("_add:", _add)
+    util.print_list("_edit:", _edit)
+    util.print_list("_del:", _del)
     return JSONResponse({ 
         "message": ", ".join(query_strs),
         "add": _add, "edit": _edit, "del": _del
