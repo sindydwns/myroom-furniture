@@ -41,7 +41,7 @@ def encode(q, env: Environment):
     completion = client.chat.completions.create(model=model, messages=messages, temperature=0)
     content = completion.choices[0].message.content
     role = completion.choices[0].message.role
-    strip_content = "\n".join([c.strip() for c in content.split("\n")])
+    strip_content = "\n".join([c.strip() for c in content.split("\n")])   
     new_message = {"role": role, "content": strip_content}
     messages.append(new_message)
     return strip_content, messages

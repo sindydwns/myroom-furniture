@@ -7,6 +7,7 @@ class FurnitureMeta:
         self.name = name
         self.w = int(w)
         self.h = int(h)
+        self.c = self.w * self.h
         self.ghost = ghost
     
     def to_dict(self):
