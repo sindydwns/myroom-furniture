@@ -61,10 +61,13 @@ async def predict(data: RequestData):
         print(data.message, e)
         return JSONResponse({ 
             "message": "no request",
+            "concept": 0,
             "add": [], "edit": [], "del": []
         })
     queries = Query.refine_queries(query_strs)
     queries = Query.filter_queries(env, queries)
+    concept = list(filter(lambda x: x.mode == 'C', queries))
+    concept = concept[-1].object_id if len(concept) > 0 else 0
     _add, _edit, _del = Query.invoke_queries(env, queries, apply)
     room = to_numpy(env)
     util.print_list("=== 초기 방 모습 ===", start_env)
@@ -73,9 +76,11 @@ async def predict(data: RequestData):
     util.print_list("_add:", _add)
     util.print_list("_edit:", _edit)
     util.print_list("_del:", _del)
+    print("_concept:", concept)
+    
     return JSONResponse({ 
         "message": ", ".join(query_strs),
-        "concept": 0,
+        "concept": concept,
         "add": _add, "edit": _edit, "del": _del
     })
 

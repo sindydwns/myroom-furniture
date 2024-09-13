@@ -137,11 +137,15 @@ class Query:
         try:
             self.valid = False
             self.query_str = query
-            if not query or query[0] not in ['A', 'E', 'D']:
+            if not query or query[0] not in ['A', 'E', 'D', 'C']:
                 return
             qs = query.split(" ")
             self.mode = qs[0][0]
-            self.meta: FurnitureMeta = database.get(int(qs[0][1:]))
+            self.object_id = int(qs[0][1:])
+            if self.mode == 'C':
+                self.valid = True
+                return
+            self.meta: FurnitureMeta = database.get(self.object_id)
             self.instance_id = int(qs[1])
             self.rotation = 0
             self.rotation_manual = False
@@ -177,7 +181,7 @@ class Query:
     def filter_queries(env: Environment, queries: list["Query"]):
         res = []
         for query in queries:
-            if query.mode == 'A':
+            if query.mode == 'A' or query.mode == 'C':
                 res.append(query)
                 continue
             instance = env.get(query.instance_id)
@@ -201,6 +205,8 @@ class Query:
                 if instance is not None:
                     instance.ghost = True
         for i, query in enumerate(queries):
+            if query.mode == 'C':
+                continue
             query_res = apply(env, query)
             if query_res is None:
                 continue
