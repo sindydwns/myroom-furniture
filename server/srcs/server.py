@@ -75,6 +75,7 @@ async def predict(data: RequestData):
     util.print_list("_del:", _del)
     return JSONResponse({ 
         "message": ", ".join(query_strs),
+        "concept": 0,
         "add": _add, "edit": _edit, "del": _del
     })
 
