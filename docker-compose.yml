@@ -6,6 +6,7 @@ services:
       - ./server:/app
     env_file:
       - .env
+    restart: always
     ports:
       - ${PORT}:8000
     deploy:
