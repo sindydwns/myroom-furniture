@@ -1,9 +1,11 @@
 from openai import OpenAI
+import random
 import os
 import util
 import numpy as np
 import math
 from models import Furniture, Environment, Location, Query, database
+from typing import TypedDict
     
 client = OpenAI()
 if "MODEL" in os.environ:
@@ -108,6 +110,11 @@ def calc_cell_score(env: Environment, loc: Location, weight: float = 1.) -> list
             room[h, w] = score * weight
     return room
 
+class RoomData(TypedDict):
+    score: float
+    x: int
+    y: int
+
 def find_candidate_cell(room: np, item: Furniture):
     res = []
     for room_y in range(room.shape[0]):
@@ -125,9 +132,21 @@ def find_candidate_cell(room: np, item: Furniture):
                 if err:
                     break
             if not err:
-                res.append({"score": score, "x": room_x, "y": room_y})
+                data: RoomData = {"score": score, "x": room_x, "y": room_y}
+                res.append(data)
     return res
-                    
+
+def lerp(a: float, b: float, t: float) -> float:
+    return (1 - t) * a + t * b
+
+def get_best_cell(cells: list[RoomData]):
+    min_score = min(cells, key=lambda x: x["score"])
+    max_score = max(cells, key=lambda x: x["score"])
+    target_score = lerp(min_score["score"], max_score["score"], 0.8)
+    cells = list(filter(lambda x: x["score"] >= target_score, cells))
+    cells = sorted(cells, key=lambda x: min(x["x"], x["y"]))
+    return random.choice(cells)
+      
 def apply(env: Environment, query: Query):
     print(f"\n--------- {query.query_str} ---------")
     if query.mode == "D":
@@ -168,7 +187,7 @@ def apply(env: Environment, query: Query):
     if len(cells) == 0:
         print("(error)", "불가능한 요청")
         return None
-    cell = cells[0]
+    cell = get_best_cell(cells)
     new_instance.x = cell["x"]
     new_instance.y = cell["y"]
     env.add(new_instance)
