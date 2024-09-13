@@ -139,13 +139,26 @@ def find_candidate_cell(room: np, item: Furniture):
 def lerp(a: float, b: float, t: float) -> float:
     return (1 - t) * a + t * b
 
-def get_best_cell(cells: list[RoomData]):
+def get_best_cell(env: Environment, room: np.ndarray, query: Query, cells: list[RoomData], instance: Furniture):
     min_score = min(cells, key=lambda x: x["score"])
     max_score = max(cells, key=lambda x: x["score"])
     target_score = lerp(min_score["score"], max_score["score"], 0.8)
     cells = list(filter(lambda x: x["score"] >= target_score, cells))
     cells = sorted(cells, key=lambda x: min(x["x"], x["y"]))
-    return random.choice(cells)
+    corner = min(cells[0]["x"], cells[0]["y"])
+    cells = list(filter(lambda x: min(x["x"], x["y"]) == corner, cells))
+    cell = random.choice(cells)
+    if query.rotation_manual == False:
+        print(instance.r, cell["y"], instance.meta.h)
+        if instance.r == 0 and cell["y"] + instance.meta.h == 6:
+            instance.rotate(2)
+        if instance.r == 1 and cell["x"] + instance.meta.w == 6:
+            instance.rotate(2)
+        if instance.r == 2 and cell["y"] == 0:
+            instance.rotate(2)
+        if instance.r == 3 and cell["x"] == 0:
+            instance.rotate(2)
+    return cell
       
 def apply(env: Environment, query: Query):
     print(f"\n--------- {query.query_str} ---------")
@@ -187,7 +200,7 @@ def apply(env: Environment, query: Query):
     if len(cells) == 0:
         print("(error)", "불가능한 요청")
         return None
-    cell = get_best_cell(cells)
+    cell = get_best_cell(env, room, query, cells, new_instance)
     new_instance.x = cell["x"]
     new_instance.y = cell["y"]
     env.add(new_instance)
