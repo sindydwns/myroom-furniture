@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "myroom"
+version = "0.1.0"
+description = ""
+authors = ["sindydwns <sindydwns@naver.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+openai = "^1.45.0"
+uvicorn = "^0.30.6"
+python-multipart = "^0.0.9"
+numpy = "^2.1.1"
+fastapi = "^0.114.2"
+
+[[tool.poetry.source]]
+name = "pipy"
+url = "https://pypi.org/simple/"
+priority = "supplemental"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

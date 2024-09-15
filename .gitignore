@@ -1,6 +1,5 @@
 server/srcs/resources/presets/*_.csv
 upload/
-myroom/
 server/srcs/resources/responses.txt
 server/srcs/resources/train.jsonl
 

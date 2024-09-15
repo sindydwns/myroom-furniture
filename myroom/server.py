@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
-from myroom import encode, apply, to_numpy, Environment
+from core import encode, apply, to_numpy, Environment
 from stt import to_text
 from pydantic import BaseModel
 import os

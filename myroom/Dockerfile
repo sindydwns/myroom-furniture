@@ -4,13 +4,13 @@ RUN apt update -y
 RUN apt install -y git vim sudo curl gcc make dumb-init
 
 RUN pip install --upgrade pip
-RUN pip install fastapi[all]
+RUN pip install poetry
 
 WORKDIR /app
-COPY . .
-RUN pip install -r requirements.txt
+COPY pyproject.toml poetry.lock* .
+RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
 
-WORKDIR /app/srcs
+WORKDIR /app/myroom
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["uvicorn", "server:app", "--reload", "--host=0.0.0.0", "--port=8000"]

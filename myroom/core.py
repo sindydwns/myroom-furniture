@@ -240,7 +240,7 @@ def test_all(env: Environment, message: str):
     return res
 
 if __name__ == "__main__":
-    # res = test_all(Environment(), "침대를 둬")
+    res = test_all(Environment(), "침대를 둬")
     
     env = Environment()
     res = test_cmd(env, [

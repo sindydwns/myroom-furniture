@@ -1,9 +1,9 @@
 version: "3"
 services:
   server:
-    build: server
+    build: myroom
     volumes:
-      - ./server:/app
+      - ./myroom:/app/myroom
     env_file:
       - .env
     restart: always
