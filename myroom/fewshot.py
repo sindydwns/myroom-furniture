@@ -41,8 +41,6 @@ def load_fallbacks(fallbacks: list[dict]) -> None:
     )
     print(f"fallbacks: {len(fallbacks)} loaded")
 
-fallbacks = get_fallbacks()
-load_fallbacks(fallbacks)
 fewshot_essential = util.read_jsonl("resources/fewshot/failure.jsonl")
 fewshot_header = util.read_file_to_text("resources/fewshot.txt")
 
@@ -59,16 +57,17 @@ def embedding_query(query: str, n_results=20) -> list[str]:
     em = get_embedding([query])
     embedding = em[0]
     res = fewshot_db.query(embedding, n_results=n_results, )
-    print(res["distances"])
-    return res["documents"][0]
+    return res["documents"][0], res["distances"][0]
 
 def get_fewshot_prompt(q: str) -> str:
-    res = embedding_query(q)
+    res, dis = embedding_query(q)
     new_fewshot_data = [json.loads(r) for r in res]
-    print([f["query"] for f in new_fewshot_data])
+    for i, f in enumerate(new_fewshot_data):
+        print("- fewshot debug:", f"{f['query']} ({dis[i]}) {f['explain']}")
     plain_text = to_plain_text(new_fewshot_data)
     extra_text = to_plain_text(fewshot_essential)
     return fewshot_header + plain_text + "\n" + extra_text
 
 if __name__ == "__main__":
-    pass
+    fallbacks = get_fallbacks()
+    load_fallbacks(fallbacks)
