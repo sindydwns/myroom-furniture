@@ -1,5 +1,6 @@
 server/srcs/resources/presets/*_.csv
 upload/
+chroma/
 server/srcs/resources/responses.txt
 server/srcs/resources/train.jsonl
 

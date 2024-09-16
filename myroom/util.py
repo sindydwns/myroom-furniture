@@ -57,3 +57,17 @@ def find(arr: list, predicate: callable):
         if predicate(arr):
             return item
     return None
+
+def read_jsonl(filename: str):
+    res = []
+    id = filename.split("/")[-1].split(".")[0].split("\\")[-1]
+    idx = 0
+    with open(filename, "r") as file:
+        for line in file.readlines():
+            if line.strip() == "":
+                continue
+            item = json.loads(line)
+            item["id"] = f"{id}_{idx}"
+            res.append(item)
+            idx += 1
+    return res

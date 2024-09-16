@@ -6,6 +6,7 @@ import numpy as np
 import math
 from models import Furniture, Environment, Location, Query, database
 from typing import TypedDict
+import fewshot
     
 client = OpenAI()
 if "MODEL" in os.environ:
@@ -15,7 +16,6 @@ else:
 print("model:", model)
 
 system_prompt = util.read_file_to_text("resources/prompt.txt")
-fewshot = util.read_file_to_text("resources/fewshot.txt")
 
 def to_numpy(env: Environment):
     room_instance = env.get(1)
@@ -33,9 +33,10 @@ def to_numpy(env: Environment):
         
 def encode(q, env: Environment):
     query_prompt = "사용자의 요청: " + q
+    fewshot_prompt = fewshot.get_fewshot_prompt(q)
     messages = [
         {"role": "system", "content": system_prompt},
-        {"role": "system", "content": fewshot},
+        {"role": "system", "content": fewshot_prompt},
         {"role": "system", "content": "\n*** 메타데이타_정보.csv ***\n" + database.to_csv()},
         {"role": "system", "content": "\n*** 환경정보.csv ***\n" + env.to_csv()},
         {"role": "user", "content": query_prompt},
