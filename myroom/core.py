@@ -57,6 +57,25 @@ def place_zero(room: np, item: Furniture):
             if x + w < room.shape[1] and y + h < room.shape[0]:
                 room[y + h, x + w] = 0
 
+def dist_cell(box, cell):
+    start = box[0]
+    end = box[1]
+    res = 9999
+    if start[0] == end[0]:
+        for y in range(start[1], end[1]):
+            c = (start[0], y)
+            res = min(res, math.dist(c, cell))
+    elif start[1] == end[1]:
+        for x in range(start[0], end[0]):
+            c = (x, start[1])
+            res = min(res, math.dist(c, cell))
+    else:
+        for x in range(start[0], end[0]):
+            for y in range(start[1], end[1]):
+                c = (x, y)
+                res = min(res, math.dist(c, cell))
+    return res if res > 0.000001 else 0.000001
+
 def calc_cell_score(env: Environment, loc: Location, weight: float = 1.) -> list:
     
     room_instance = env.get(1)
@@ -64,15 +83,13 @@ def calc_cell_score(env: Environment, loc: Location, weight: float = 1.) -> list
     
     item_instance = env.get(loc.instance_id)
 
-    center_x = item_instance.x + item_instance.w / 2 - 0.5
-    center_y = item_instance.y + item_instance.h / 2 - 0.5
-    c = (center_x, center_y)
+    box = ((item_instance.x, item_instance.y), (item_instance.x + item_instance.w, item_instance.y + item_instance.h))
     max_len = math.sqrt(pow(room.shape[1], 2) + pow(room.shape[0], 2))
     
     for w in range(room_instance.meta.w):
         for h in range(room_instance.meta.h):
             p = (w, h)
-            score = math.dist(c, p) / max_len
+            score = dist_cell(box, p) / max_len
             ghost = item_instance.instance_id < 100
             if loc.code == "ne" or loc.code == "in" or loc.code == "ce":
                 score = 1 - score
