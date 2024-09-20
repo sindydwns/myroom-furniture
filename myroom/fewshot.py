@@ -68,6 +68,9 @@ def get_fewshot_prompt(q: str) -> str:
     extra_text = to_plain_text(fewshot_essential)
     return fewshot_header + plain_text + "\n" + extra_text
 
-if __name__ == "__main__":
+def update_fallbacks():
     fallbacks = get_fallbacks()
     load_fallbacks(fallbacks)
+
+if __name__ == "__main__":
+    update_fallbacks()

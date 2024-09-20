@@ -12,6 +12,7 @@ import threading
 from models import Query
 from models import Furniture as Fur
 import util
+from fewshot import update_fallbacks
 lock = threading.Lock()
 
 class Furniture(BaseModel):
@@ -23,6 +24,8 @@ class Furniture(BaseModel):
 class RequestData(BaseModel):
     current: list[Furniture]
     message: str
+
+update_fallbacks()
 
 app = FastAPI()
 
