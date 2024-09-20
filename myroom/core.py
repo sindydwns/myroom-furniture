@@ -160,7 +160,7 @@ def lerp(a: float, b: float, t: float) -> float:
 def get_best_cell(env: Environment, room: np.ndarray, query: Query, cells: list[RoomData], instance: Furniture):
     min_score = min(cells, key=lambda x: x["score"])
     max_score = max(cells, key=lambda x: x["score"])
-    target_score = lerp(min_score["score"], max_score["score"], 0.8)
+    target_score = lerp(min_score["score"], max_score["score"], 0.9)
     cells = list(filter(lambda x: x["score"] >= target_score, cells))
     cells = sorted(cells, key=lambda x: min(x["x"], x["y"]))
     corner = min(cells[0]["x"], cells[0]["y"])
